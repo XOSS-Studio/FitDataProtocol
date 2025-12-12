@@ -78,6 +78,12 @@ open class ZonesTargetMessage: FitMessage {
                 powerZoneType: PowerZoneCalculation? = nil) {
         super.init()
         
+        self.$maxHeartRate.owner = self
+        self.$thresholdHeartRate.owner = self
+        self.$ftp.owner = self
+        self.$heartRateZoneType.owner = self
+        self.$powerZoneType.owner = self
+        
         if let max = maxHeartRate {
             self.maxHeartRate = Measurement(value: Double(max), unit: self.$maxHeartRate.unitType)
         }
