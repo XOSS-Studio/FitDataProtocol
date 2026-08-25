@@ -176,14 +176,14 @@ public struct FitFileDecoder {
                             localMessageType: header.localMessageType
                         )
                     }
-                    guard let previousTimestamp = previousTimestamp else {
+                    guard let timestampReference = previousTimestamp else {
                         throw FitDecodingError.missingCompressedTimestampReference(
                             localMessageType: header.localMessageType
                         )
                     }
 
                     let timestamp = Self.expandedTimestamp(
-                        previousTimestamp: previousTimestamp,
+                        previousTimestamp: timestampReference,
                         timeOffset: timeOffset
                     )
                     let timestampDefinition = FieldDefinition(
