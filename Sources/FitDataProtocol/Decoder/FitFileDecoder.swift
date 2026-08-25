@@ -138,6 +138,7 @@ public struct FitFileDecoder {
         messageData = try readFitFile(data: data, validateCrc: shouldValidate).get()
         
         var decoder = DecodeData()
+        var previousTimestamp: UInt32?
 
         repeat {
             let header = RecordHeader.decode(decoder: &decoder, data: messageData)
@@ -151,55 +152,93 @@ public struct FitFileDecoder {
 
             } else {
                 // We have a Data Message
-                var hasMessageDecoder = false
-                var messageType: FitMessage!
-                var currentGlobalMessage: UInt16!
-
-                if let message = messages.filter({
-                    $0.globalMessageNumber() == definitionDict[header.localMessageType]!.globalMessageNumber
-                }).first {
-                    hasMessageDecoder = true
-                    messageType = message.init()
-                    currentGlobalMessage = message.globalMessageNumber()
-                }
-                                
-                var fieldSize: Int = 0
-                for msg in definitionDict[header.localMessageType]!.fieldDefinitions {
-                    fieldSize = fieldSize + Int(msg.size)
+                guard let definition = definitionDict[header.localMessageType] else {
+                    throw FitDecodingError.missingMessageDefinition(
+                        localMessageType: header.localMessageType
+                    )
                 }
 
-                let stdData = decoder.decodeData(messageData, length: fieldSize)
-
-                var devSize: Int = 0
-                for msg in definitionDict[header.localMessageType]!.developerFieldDefinitions {
-                    devSize = devSize + Int(msg.size)
+                let fieldSize = definition.fieldDefinitions.reduce(0) { $0 + Int($1.size) }
+                let devSize = definition.developerFieldDefinitions.reduce(0) { $0 + Int($1.size) }
+                guard decoder.index + fieldSize + devSize <= messageData.count else {
+                    throw FitDecodingError.invalidDataMessageSize
                 }
 
+                var stdData = decoder.decodeData(messageData, length: fieldSize)
                 let devData = decoder.decodeData(messageData, length: devSize)
+                var effectiveDefinition = definition
+
+                if let timeOffset = header.compressedTimestampOffset {
+                    guard definition.fieldDefinitions.contains(where: {
+                        $0.fieldDefinitionNumber == Self.timestampFieldNumber
+                    }) == false else {
+                        throw FitDecodingError.invalidCompressedTimestampDefinition(
+                            localMessageType: header.localMessageType
+                        )
+                    }
+                    guard let previousTimestamp = previousTimestamp else {
+                        throw FitDecodingError.missingCompressedTimestampReference(
+                            localMessageType: header.localMessageType
+                        )
+                    }
+
+                    let timestamp = Self.expandedTimestamp(
+                        previousTimestamp: previousTimestamp,
+                        timeOffset: timeOffset
+                    )
+                    let timestampDefinition = FieldDefinition(
+                        fieldDefinitionNumber: Self.timestampFieldNumber,
+                        size: UInt8(MemoryLayout<UInt32>.size),
+                        endianAbility: true,
+                        baseType: .uint32
+                    )
+                    let effectiveFieldDefinitions = definition.fieldDefinitions + [timestampDefinition]
+                    guard effectiveFieldDefinitions.count <= Int(UInt8.max) else {
+                        throw FitDecodingError.invalidDataMessageSize
+                    }
+
+                    effectiveDefinition = DefinitionMessage(
+                        architecture: definition.architecture,
+                        globalMessageNumber: definition.globalMessageNumber,
+                        fields: UInt8(effectiveFieldDefinitions.count),
+                        fieldDefinitions: effectiveFieldDefinitions,
+                        developerFieldDefinitions: definition.developerFieldDefinitions
+                    )
+                    stdData.append(Self.encodedTimestamp(timestamp, architecture: definition.architecture))
+                    previousTimestamp = timestamp
+                } else if let timestamp = Self.fullTimestamp(in: stdData, definition: definition) {
+                    previousTimestamp = timestamp
+                }
+
+                guard let messageType = messages.first(where: {
+                    $0.globalMessageNumber() == definition.globalMessageNumber
+                })?.init() else {
+                    continue
+                }
 
                 let fieldData = FieldData(fieldData: stdData, developerFieldData: devData)
+                let fieldDescriptions = self.fieldDescription.compactMap {
+                    $0.messageNumber == definition.globalMessageNumber ? $0 : nil
+                }
+                let result: Result<FitMessage, FitDecodingError> = messageType.decode(
+                    fieldData: fieldData,
+                    definition: effectiveDefinition
+                )
 
-                if hasMessageDecoder == true {
-                    let fieldDescriptions = self.fieldDescription.compactMap { $0.messageNumber == currentGlobalMessage ? $0 : nil }
-                                    
-                    let result = messageType.decode(fieldData: fieldData,
-                                                    definition: definitionDict[header.localMessageType]!)
-                    
-                    switch result {
-                    case .success(let message):
-                        if let message = message as? FieldDescriptionMessage {
-                            self.fieldDescription.append(message)
-                        } else {
-                            let devData = unwrapDeveloperData(message: message, fieldsDescriptions: fieldDescriptions)
-                            message.developerValues = devData
-                            decoded?(message)
-                        }
-                    case .failure(let error):
-                        throw error
+                switch result {
+                case .success(let message):
+                    if let message = message as? FieldDescriptionMessage {
+                        self.fieldDescription.append(message)
+                    } else {
+                        let devData = unwrapDeveloperData(
+                            message: message,
+                            fieldsDescriptions: fieldDescriptions
+                        )
+                        message.developerValues = devData
+                        decoded?(message)
                     }
-                    
-                } else {
-                    // print("NO Decoder for Global Message: \(definitionDict[header.localMessageType]?.globalMessageNumber)")
+                case .failure(let error):
+                    throw error
                 }
 
             }
@@ -210,6 +249,55 @@ public struct FitFileDecoder {
 }
 
 private extension FitFileDecoder {
+
+    static let timestampFieldNumber: UInt8 = 253
+
+    static func expandedTimestamp(previousTimestamp: UInt32, timeOffset: UInt8) -> UInt32 {
+        let previousOffset = previousTimestamp & 0x1F
+        let timestampBase = previousTimestamp & 0xFFFFFFE0
+        let timestamp = timestampBase | UInt32(timeOffset)
+
+        return UInt32(timeOffset) < previousOffset ? timestamp &+ 0x20 : timestamp
+    }
+
+    static func encodedTimestamp(_ timestamp: UInt32, architecture: Endian) -> Data {
+        switch architecture {
+        case .little:
+            return Data(from: timestamp.littleEndian)
+        case .big:
+            return Data(from: timestamp.bigEndian)
+        }
+    }
+
+    static func fullTimestamp(in data: Data, definition: DefinitionMessage) -> UInt32? {
+        var dataDecoder = DecodeData()
+
+        for fieldDefinition in definition.fieldDefinitions {
+            let fieldData = dataDecoder.decodeData(data, length: Int(fieldDefinition.size))
+            guard fieldDefinition.fieldDefinitionNumber == timestampFieldNumber else {
+                continue
+            }
+            guard fieldDefinition.size == UInt8(MemoryLayout<UInt32>.size),
+                  fieldDefinition.baseType == .uint32
+            else {
+                return nil
+            }
+
+            var timestampDecoder = DecodeData()
+            let decodedTimestamp = timestampDecoder.decodeUInt32(fieldData)
+            let timestamp: UInt32
+            switch definition.architecture {
+            case .little:
+                timestamp = decodedTimestamp.littleEndian
+            case .big:
+                timestamp = decodedTimestamp.bigEndian
+            }
+
+            return timestamp == UInt32.max ? nil : timestamp
+        }
+
+        return nil
+    }
     
     /// Creates the Developer Data Values For the FitMessage
     /// - Parameter message: FitMessage

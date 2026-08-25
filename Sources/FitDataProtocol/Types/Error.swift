@@ -25,7 +25,7 @@
 import Foundation
 
 /// Errors for FIT File Decoding
-public enum FitDecodingError: Error {
+public enum FitDecodingError: Error, Equatable {
     /// Invalid Architecture Type
     case invalidArchitecture
     /// Not a Fit File
@@ -42,6 +42,12 @@ public enum FitDecodingError: Error {
     case duplicateFitMessage
     /// Invalid Data Message Size
     case invalidDataMessageSize
+    /// Data message references a local message type that has not been defined
+    case missingMessageDefinition(localMessageType: UInt8)
+    /// Compressed timestamp data appears before a full timestamp reference
+    case missingCompressedTimestampReference(localMessageType: UInt8)
+    /// Compressed timestamp data uses a definition that already contains a timestamp field
+    case invalidCompressedTimestampDefinition(localMessageType: UInt8)
 }
 
 extension FitDecodingError: LocalizedError {
@@ -65,6 +71,12 @@ extension FitDecodingError: LocalizedError {
             return "Duplicate FitMessage.Type is not allowed."
         case .invalidDataMessageSize:
             return "Header Indicates more Data then Filesize."
+        case .missingMessageDefinition(let localMessageType):
+            return "Missing message definition for local message type \(localMessageType)."
+        case .missingCompressedTimestampReference(let localMessageType):
+            return "Missing full timestamp reference for compressed local message type \(localMessageType)."
+        case .invalidCompressedTimestampDefinition(let localMessageType):
+            return "Compressed local message type \(localMessageType) must not include a timestamp field in its data definition."
         }
     }
 }
@@ -149,4 +161,3 @@ internal extension FitEncodingError {
     }
 
 }
-

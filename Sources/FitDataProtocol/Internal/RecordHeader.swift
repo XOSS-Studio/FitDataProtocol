@@ -33,6 +33,8 @@ internal struct RecordHeader {
 
     private(set) var developerData: Bool
 
+    private(set) var compressedTimestampOffset: UInt8?
+
     internal var normalHeader: UInt8 {
         var value: UInt8 = localMessageType
 
@@ -44,10 +46,14 @@ internal struct RecordHeader {
         return UInt8(value)
     }
 
-    internal init(localMessageType: UInt8, isDataMessage: Bool, developerData: Bool = false) {
+    internal init(localMessageType: UInt8,
+                  isDataMessage: Bool,
+                  developerData: Bool = false,
+                  compressedTimestampOffset: UInt8? = nil) {
         self.localMessageType = min(15, localMessageType)
         self.isDataMessage = isDataMessage
         self.developerData = developerData
+        self.compressedTimestampOffset = compressedTimestampOffset
     }
 
 }
@@ -67,10 +73,12 @@ internal extension RecordHeader {
         var isDataMessage = false
         var developerData = false
         var messageType: UInt8 = 0
+        var compressedTimestampOffset: UInt8?
 
         if (head & 0x80 == 0x80) {
-
-            messageType = head & 0x60 >> 5
+            isDataMessage = true
+            messageType = (head & 0x60) >> 5
+            compressedTimestampOffset = head & 0x1F
 
         } else {
 
@@ -89,6 +97,7 @@ internal extension RecordHeader {
 
         return RecordHeader(localMessageType: messageType,
                             isDataMessage: isDataMessage,
-                            developerData: developerData)
+                            developerData: developerData,
+                            compressedTimestampOffset: compressedTimestampOffset)
     }
 }

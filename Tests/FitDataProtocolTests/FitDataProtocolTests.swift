@@ -18,6 +18,9 @@ class FitDataProtocolTests: XCTestCase {
         ("testBadProtocolBadFitFile", testBadProtocolBadFitFile),
         ("testHeaderSizeWrong", testHeaderSizeWrong),
         ("testSparseData", testSparseData),
+        ("testCompressedTimestampDecodesWithRollover", testCompressedTimestampDecodesWithRollover),
+        ("testUndefinedLocalMessageThrows", testUndefinedLocalMessageThrows),
+        ("testCompressedTimestampRequiresReference", testCompressedTimestampRequiresReference),
         ("testExampleEncodeDecode", testExampleEncodeDecode)
     ]
 }
@@ -221,4 +224,126 @@ extension FitDataProtocolTests {
         
     }
 
+    func testCompressedTimestampDecodesWithRollover() throws {
+        let referenceTimestamp: UInt32 = 0x1000001E
+        let expectedCompressedTimestamp: UInt32 = 0x10000022
+        var records = Data()
+
+        records.append(Self.definitionRecord(
+            localMessageType: 0,
+            fields: [Self.timestampFieldDefinition]
+        ))
+        records.append(RecordHeader(localMessageType: 0, isDataMessage: true).normalHeader)
+        records.append(Data(from: referenceTimestamp.littleEndian))
+        records.append(Self.definitionRecord(
+            localMessageType: 1,
+            fields: [Self.heartRateFieldDefinition]
+        ))
+        records.append(0xA2)
+        records.append(145)
+
+        var decodedRecords: [RecordMessage] = []
+        var decoder = FitFileDecoder(crcCheckingStrategy: .throws)
+        try decoder.decode(
+            data: Self.fitFile(records: records),
+            messages: [RecordMessage.self],
+            decoded: { message in
+                if let record = message as? RecordMessage {
+                    decodedRecords.append(record)
+                }
+            }
+        )
+
+        XCTAssertEqual(decodedRecords.count, 2)
+        XCTAssertEqual(Self.rawTimestamp(decodedRecords[0]), referenceTimestamp)
+        XCTAssertEqual(Self.rawTimestamp(decodedRecords[1]), expectedCompressedTimestamp)
+        XCTAssertEqual(decodedRecords[1].heartRate?.value, 145)
+    }
+
+    func testUndefinedLocalMessageThrows() {
+        var didDecodeMessage = false
+        var decoder = FitFileDecoder(crcCheckingStrategy: .throws)
+
+        XCTAssertThrowsError(try decoder.decode(
+            data: Self.fitFile(records: Data([0x03])),
+            messages: [RecordMessage.self],
+            decoded: { _ in didDecodeMessage = true }
+        )) { error in
+            XCTAssertEqual(
+                error as? FitDecodingError,
+                .missingMessageDefinition(localMessageType: 3)
+            )
+        }
+        XCTAssertFalse(didDecodeMessage)
+    }
+
+    func testCompressedTimestampRequiresReference() {
+        var records = Data()
+        records.append(Self.definitionRecord(
+            localMessageType: 1,
+            fields: [Self.heartRateFieldDefinition]
+        ))
+        records.append(0xA1)
+        records.append(80)
+
+        var decoder = FitFileDecoder(crcCheckingStrategy: .throws)
+        XCTAssertThrowsError(try decoder.decode(
+            data: Self.fitFile(records: records),
+            messages: [RecordMessage.self],
+            decoded: nil
+        )) { error in
+            XCTAssertEqual(
+                error as? FitDecodingError,
+                .missingCompressedTimestampReference(localMessageType: 1)
+            )
+        }
+    }
+
+}
+
+private extension FitDataProtocolTests {
+    static let timestampFieldDefinition = FieldDefinition(
+        fieldDefinitionNumber: 253,
+        size: UInt8(MemoryLayout<UInt32>.size),
+        endianAbility: true,
+        baseType: .uint32
+    )
+
+    static let heartRateFieldDefinition = FieldDefinition(
+        fieldDefinitionNumber: 3,
+        size: UInt8(MemoryLayout<UInt8>.size),
+        endianAbility: false,
+        baseType: .uint8
+    )
+
+    static func definitionRecord(
+        localMessageType: UInt8,
+        fields: [FieldDefinition]
+    ) -> Data {
+        let definition = DefinitionMessage(
+            architecture: .little,
+            globalMessageNumber: RecordMessage.globalMessageNumber(),
+            fields: UInt8(fields.count),
+            fieldDefinitions: fields,
+            developerFieldDefinitions: []
+        )
+        var data = Data([RecordHeader(
+            localMessageType: localMessageType,
+            isDataMessage: false
+        ).normalHeader])
+        data.append(definition.encode())
+        return data
+    }
+
+    static func fitFile(records: Data) -> Data {
+        var data = FileHeader(dataSize: UInt32(records.count)).encodedData
+        data.append(records)
+        data.append(Data(from: CRC16(data: records).crc.littleEndian))
+        return data
+    }
+
+    static func rawTimestamp(_ message: RecordMessage) -> UInt32? {
+        guard let date = message.timeStamp?.recordDate else { return nil }
+        return UInt32(date.timeIntervalSince(Date.antEPOCH))
+    }
 }
