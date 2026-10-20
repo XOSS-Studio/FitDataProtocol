@@ -41,16 +41,23 @@ final public class CRC16 {
     public convenience init(data: Data) {
         self.init()
 
-        crc = CRC16.caluclate(data: data)
+        crc = CRC16.caluclate(data: data, seed: 0)
+    }
+
+    /// Continues the checksum over `data`, as if it were appended to the bytes already checked
+    ///
+    /// - Parameter data: Following bytes
+    internal func update(with data: Data) {
+        crc = CRC16.caluclate(data: data, seed: crc)
     }
 }
 
 private extension CRC16 {
 
-    private class func caluclate(data: Data) -> UInt16 {
+    private class func caluclate(data: Data, seed: UInt16) -> UInt16 {
 
         var tmp: UInt16 = 0
-        var crc: UInt16 = 0
+        var crc: UInt16 = seed
 
         for byte in data {
             // compute checksum of lower four bits of byte
