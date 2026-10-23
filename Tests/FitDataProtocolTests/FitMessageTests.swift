@@ -23,6 +23,7 @@ class FitMessageTests: XCTestCase {
         ("testHrvMessage", testHrvMessage),
         ("testWeightScaleMessage", testWeightScaleMessage),
         ("testZonesTargetMessage", testZonesTargetMessage),
+        ("testSessionMessageDescentAndTrainingLoad", testSessionMessageDescentAndTrainingLoad),
     ]
 }
 
@@ -335,6 +336,24 @@ extension FitMessageTests {
         }
         
     }
+    func testSessionMessageDescentAndTrainingLoad() throws {
+        let msg = SessionMessage(totalDescent: Measurement(value: 123, unit: UnitLength.meters),
+                                 trainingStressScore: Measurement(value: 55.5, unit: UnitCount.trainingStress),
+                                 intensityFactor: Measurement(value: 0.8, unit: UnitCount.intensityFactor))
+
+        let descent = try XCTUnwrap(msg.totalDescent)
+        XCTAssertEqual(descent.converted(to: UnitLength.meters).value, 123, accuracy: 0.5)
+        let tss = try XCTUnwrap(msg.trainingStressScore)
+        XCTAssertEqual(tss.value, 55.5, accuracy: 0.05)
+        let intensity = try XCTUnwrap(msg.intensityFactor)
+        XCTAssertEqual(intensity.value, 0.8, accuracy: 0.0005)
+
+        let empty = SessionMessage()
+        XCTAssertNil(empty.totalDescent)
+        XCTAssertNil(empty.trainingStressScore)
+        XCTAssertNil(empty.intensityFactor)
+    }
+
     func testZonesTargetMessage() {
         
         let target = ZonesTargetMessage(maxHeartRate: 55,

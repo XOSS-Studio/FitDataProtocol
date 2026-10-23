@@ -857,6 +857,7 @@ open class SessionMessage: FitMessage {
         self.$averagePower.owner = self
         self.$maximumPower.owner = self
         self.$totalAscent.owner = self
+        self.$totalDescent.owner = self
         self.$totalTrainingEffect.owner = self
         self.$firstLapIndex.owner = self
         self.$numberOfLaps.owner = self
@@ -974,6 +975,8 @@ open class SessionMessage: FitMessage {
                             necPosition: Position? = nil,
                             swcPosition: Position? = nil,
                             normalizedPower: Measurement<UnitPower>? = nil,
+                            trainingStressScore: Measurement<UnitCount>? = nil,
+                            intensityFactor: Measurement<UnitCount>? = nil,
                             averageStrokeDistance: Measurement<UnitLength>? = nil,
                             swimStroke: SwimStroke? = nil,
                             poolLength: Measurement<UnitLength>? = nil,
@@ -1074,6 +1077,8 @@ open class SessionMessage: FitMessage {
         self.necPosition = necPosition
         self.swcPosition = swcPosition
         self.normalizedPower = normalizedPower
+        self.trainingStressScore = trainingStressScore
+        self.intensityFactor = intensityFactor
         self.averageStrokeDistance = averageStrokeDistance
         self.swimStroke = swimStroke
         self.poolLength = poolLength
