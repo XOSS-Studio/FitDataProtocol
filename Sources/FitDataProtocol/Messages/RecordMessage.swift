@@ -74,6 +74,7 @@ open class RecordMessage: FitMessage {
         }
         set {
             self.enhancedAltitude = newValue
+            self._altitude = uint16FieldValue(newValue, for: self.$_altitude)
         }
     }
     
@@ -112,6 +113,7 @@ open class RecordMessage: FitMessage {
         }
         set {
             self.enhancedSpeed = newValue
+            self._speed = uint16FieldValue(newValue, for: self.$_speed)
         }
     }
     

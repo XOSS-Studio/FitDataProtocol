@@ -99,6 +99,7 @@ open class JumpMessage: FitMessage {
         }
         set {
             self.enhanceSpeed = newValue
+            self._speed = uint16FieldValue(newValue, for: self.$_speed)
         }
     }
     

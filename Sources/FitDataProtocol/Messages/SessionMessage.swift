@@ -142,6 +142,7 @@ open class SessionMessage: FitMessage {
         }
         set {
             self.enhancedAvgSpeed = newValue
+            self._averageSpeed = uint16FieldValue(newValue, for: self.$_averageSpeed)
         }
     }
     
@@ -162,6 +163,7 @@ open class SessionMessage: FitMessage {
         }
         set {
             self.enhancedMaximumSpeed = newValue
+            self._maximumSpeed = uint16FieldValue(newValue, for: self.$_maximumSpeed)
         }
     }
     
@@ -373,6 +375,7 @@ open class SessionMessage: FitMessage {
         }
         set {
             self.enhancedAverageAltitude = newValue
+            self._averageAltitude = uint16FieldValue(newValue, for: self.$_averageAltitude)
         }
     }
     
@@ -393,6 +396,7 @@ open class SessionMessage: FitMessage {
         }
         set {
             self.enhancedMaximumAltitude = newValue
+            self._maximumAltitude = uint16FieldValue(newValue, for: self.$_maximumAltitude)
         }
     }
     
@@ -532,6 +536,7 @@ open class SessionMessage: FitMessage {
         }
         set {
             self.enhancedMinimumAltitude = newValue
+            self._minimumAltitude = uint16FieldValue(newValue, for: self.$_minimumAltitude)
         }
     }
     

@@ -29,10 +29,12 @@ class FitMessageTests: XCTestCase {
         ("testMultibyteStringFieldRoundTrip", testMultibyteStringFieldRoundTrip),
         ("testOverlongStringFieldIsNotEncoded", testOverlongStringFieldIsNotEncoded),
         ("testEncodingRoundsHalfAwayFromZero", testEncodingRoundsHalfAwayFromZero),
+        ("testUint16FieldsWrittenWithEnhancedFields", testUint16FieldsWrittenWithEnhancedFields),
         ("testStringFieldIncludesTerminator", testStringFieldIncludesTerminator),
         ("testCompressedSpeedDistanceExpansion", testCompressedSpeedDistanceExpansion),
         ("testCompressedAccumulatedPowerExpansion", testCompressedAccumulatedPowerExpansion),
         ("testDecoderExpandsCompressedSpeedDistance", testDecoderExpandsCompressedSpeedDistance),
+        ("testUint16FieldRangeBoundaries", testUint16FieldRangeBoundaries),
         ("testEncodingClampsToSixtyFourBitRange", testEncodingClampsToSixtyFourBitRange),
         ("testComponentExpansionSkipsBigEndianMessages", testComponentExpansionSkipsBigEndianMessages),
         ("testComponentExpansionKeepsExistingDistance", testComponentExpansionKeepsExistingDistance),
@@ -462,6 +464,50 @@ extension FitMessageTests {
         let distance = Resolution(scale: 100.0, offset: 0.0)
         let encodedDistance = try BaseType.uint32.encodedResolution(value: 0.57, resolution: distance).get()
         XCTAssertEqual(encodedDistance, Data(from: UInt32(57).littleEndian))
+    }
+
+    func testUint16FieldsWrittenWithEnhancedFields() {
+        let record = RecordMessage(altitude: Measurement(value: 120, unit: UnitLength.meters),
+                                   speed: Measurement(value: 7, unit: UnitSpeed.metersPerSecond))
+        XCTAssertNotNil(record.fieldDataDict[2])
+        XCTAssertNotNil(record.fieldDataDict[78])
+        XCTAssertNotNil(record.fieldDataDict[6])
+        XCTAssertNotNil(record.fieldDataDict[73])
+
+        // Outside the uint16 range only the enhanced field is written
+        let outOfRange = RecordMessage(altitude: Measurement(value: 13_000, unit: UnitLength.meters),
+                                       speed: Measurement(value: 70, unit: UnitSpeed.metersPerSecond))
+        XCTAssertNil(outOfRange.fieldDataDict[2])
+        XCTAssertNotNil(outOfRange.fieldDataDict[78])
+        XCTAssertNil(outOfRange.fieldDataDict[6])
+        XCTAssertNotNil(outOfRange.fieldDataDict[73])
+        XCTAssertEqual(outOfRange.speed?.value ?? 0, 70, accuracy: 0.001)
+
+        let session = SessionMessage(averageSpeed: Measurement(value: 7, unit: UnitSpeed.metersPerSecond),
+                                     averageAltitude: Measurement(value: 88, unit: UnitLength.meters))
+        XCTAssertNotNil(session.fieldDataDict[14])
+        XCTAssertNotNil(session.fieldDataDict[124])
+        XCTAssertNotNil(session.fieldDataDict[49])
+        XCTAssertNotNil(session.fieldDataDict[126])
+    }
+
+    func testUint16FieldRangeBoundaries() {
+        // Speed is 1000 * m/s: 65534 is the largest valid uint16 value, 65535 is invalid
+        let fastestValid = RecordMessage(speed: Measurement(value: 65.5342, unit: UnitSpeed.metersPerSecond))
+        XCTAssertNotNil(fastestValid.fieldDataDict[6])
+        let roundsToInvalid = RecordMessage(speed: Measurement(value: 65.5348, unit: UnitSpeed.metersPerSecond))
+        XCTAssertNil(roundsToInvalid.fieldDataDict[6])
+        XCTAssertNotNil(roundsToInvalid.fieldDataDict[73])
+
+        // Altitude is 5 * (m + 500): -500 m is raw 0, anything lower is negative
+        let lowestValid = RecordMessage(altitude: Measurement(value: -500, unit: UnitLength.meters))
+        XCTAssertNotNil(lowestValid.fieldDataDict[2])
+        let belowRange = RecordMessage(altitude: Measurement(value: -501, unit: UnitLength.meters))
+        XCTAssertNil(belowRange.fieldDataDict[2])
+
+        let lap = LapMessage(averageSpeed: Measurement(value: 7, unit: UnitSpeed.metersPerSecond))
+        XCTAssertNotNil(lap.fieldDataDict[13])
+        XCTAssertNotNil(lap.fieldDataDict[110])
     }
 
     func testEncodingClampsToSixtyFourBitRange() throws {

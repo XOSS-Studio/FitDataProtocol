@@ -184,4 +184,24 @@ internal extension FitMessage {
     func preferredField<T>(preferred: Measurement<T>?, fallbakck: Measurement<T>?) -> Measurement<T>? {
         return preferred != nil ? preferred : fallbakck
     }
+
+    /// Value to write into a uint16 field that has an enhanced counterpart
+    ///
+    /// Writing both fields keeps files readable by decoders that only read the original field.
+    /// Returns nil when the value does not fit the uint16 field, so only the enhanced field is written.
+    ///
+    /// - Parameter value: value being set on the enhanced field
+    /// - Parameter field: the original uint16 field
+    func uint16FieldValue<U>(_ value: Measurement<U>?, for field: FitFieldDimension<U>) -> Measurement<U>? {
+        guard let value = value, field.base.type == .uint16 else { return nil }
+
+        let encoded = value.converted(to: field.unitType).value
+            .resolution(.adding, resolution: field.base.resolution)
+            .rounded()
+
+        // 0xFFFF is the uint16 invalid value
+        guard encoded >= 0, encoded < Double(UInt16.max) else { return nil }
+
+        return value
+    }
 }
