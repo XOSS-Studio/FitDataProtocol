@@ -169,9 +169,15 @@ internal extension BaseType {
             let data = Data(from: new.littleEndian)
             return.success(data)
 
-        case .uint32, .uint32z, .float32:
+        case .uint32, .uint32z:
             let new = value.resolution(type: UInt32.self, ResolutionDirection.adding, resolution: resolution)
             let data = Data(from: new.littleEndian)
+            return.success(data)
+
+        case .float32:
+            // IEEE 754 bit pattern, matching how the decoder reads float32 fields
+            let new = Float32(value.resolution(ResolutionDirection.adding, resolution: resolution))
+            let data = Data(from: new.bitPattern.littleEndian)
             return.success(data)
 
         case .string:
@@ -182,9 +188,15 @@ internal extension BaseType {
             let data = Data(from: new.littleEndian)
             return.success(data)
 
-        case .uint64, .uint64z, .float64:
+        case .uint64, .uint64z:
             let new = value.resolution(type: UInt64.self, ResolutionDirection.adding, resolution: resolution)
             let data = Data(from: new.littleEndian)
+            return.success(data)
+
+        case .float64:
+            // IEEE 754 bit pattern, matching how the decoder reads float64 fields
+            let new = value.resolution(ResolutionDirection.adding, resolution: resolution)
+            let data = Data(from: new.bitPattern.littleEndian)
             return.success(data)
 
         case .unknown:

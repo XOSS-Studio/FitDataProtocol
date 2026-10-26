@@ -68,13 +68,13 @@ open class EventMessage: FitMessage {
         super.init()
         // TODO: Subfields
         
-        self.$timeStamp.owner = self
+        self._timeStamp.owner = self
         
-        self.$event.owner = self
-        self.$eventType.owner = self
-        self.$eventData.owner = self
-        self.$eventMoreData.owner = self
-        self.$eventGroup.owner = self
+        self._event.owner = self
+        self._eventType.owner = self
+        self._eventData.owner = self
+        self._eventMoreData.owner = self
+        self._eventGroup.owner = self
     }
     
     public convenience init(timeStamp: FitTime? = nil,
@@ -95,7 +95,7 @@ open class EventMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -115,7 +115,7 @@ open class EventMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

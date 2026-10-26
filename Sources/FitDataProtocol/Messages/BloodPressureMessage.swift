@@ -101,18 +101,18 @@ open class BloodPressureMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$timeStamp.owner = self
+        self._timeStamp.owner = self
         
-        self.$systolicPressure.owner = self
-        self.$diastolicPressure.owner = self
-        self.$meanArterialPressure.owner = self
-        self.$mapSampleMean.owner = self
-        self.$mapMorningValues.owner = self
-        self.$mapEveningValues.owner = self
-        self.$heartRate.owner = self
-        self.$heartRateType.owner = self
-        self.$status.owner = self
-        self.$userProfileIndex.owner = self
+        self._systolicPressure.owner = self
+        self._diastolicPressure.owner = self
+        self._meanArterialPressure.owner = self
+        self._mapSampleMean.owner = self
+        self._mapMorningValues.owner = self
+        self._mapEveningValues.owner = self
+        self._heartRate.owner = self
+        self._heartRateType.owner = self
+        self._status.owner = self
+        self._userProfileIndex.owner = self
     }
     
     public convenience init(timeStamp: FitTime? = nil,
@@ -151,7 +151,7 @@ open class BloodPressureMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -171,7 +171,7 @@ open class BloodPressureMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

@@ -103,20 +103,20 @@ open class GoalMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$messageIndex.owner = self
+        self._messageIndex.owner = self
         
-        self.$sport.owner = self
-        self.$subSport.owner = self
-        self.$startDate.owner = self
-        self.$endDate.owner = self
-        self.$goalType.owner = self
-        self.$goalValue.owner = self
-        self.$repeatGoal.owner = self
-        self.$targetValue.owner = self
-        self.$recurrence.owner = self
-        self.$recurrenceValue.owner = self
-        self.$enabled.owner = self
-        self.$source.owner = self
+        self._sport.owner = self
+        self._subSport.owner = self
+        self._startDate.owner = self
+        self._endDate.owner = self
+        self._goalType.owner = self
+        self._goalValue.owner = self
+        self._repeatGoal.owner = self
+        self._targetValue.owner = self
+        self._recurrence.owner = self
+        self._recurrenceValue.owner = self
+        self._enabled.owner = self
+        self._source.owner = self
     }
     
     public convenience init(messageIndex: MessageIndex? = nil,
@@ -155,7 +155,7 @@ open class GoalMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -175,7 +175,7 @@ open class GoalMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

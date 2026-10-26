@@ -51,10 +51,10 @@ open class PowerZoneMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$messageIndex.owner = self
+        self._messageIndex.owner = self
         
-        self.$highLevel.owner = self
-        self.$name.owner = self
+        self._highLevel.owner = self
+        self._name.owner = self
     }
     
     public convenience init(messageIndex: MessageIndex? = nil,
@@ -73,7 +73,7 @@ open class PowerZoneMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -93,7 +93,7 @@ open class PowerZoneMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

@@ -74,10 +74,10 @@ open class CapabilitiesMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$supportedLanguages.owner = self
-        self.$supportedSports.owner = self
-        self.$workouts.owner = self
-        self.$connectivity.owner = self
+        self._supportedLanguages.owner = self
+        self._supportedSports.owner = self
+        self._workouts.owner = self
+        self._connectivity.owner = self
     }
     
     public init(languages: LanguageCapabilities? = nil,
@@ -98,7 +98,7 @@ open class CapabilitiesMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -118,7 +118,7 @@ open class CapabilitiesMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

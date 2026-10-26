@@ -108,16 +108,16 @@ open class FieldDescriptionMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$dataIndex.owner = self
-        self.$definitionNumber.owner = self
-        self.$baseTypeId.owner = self
-        self.$fieldName.owner = self
-        self.$scale.owner = self
-        self.$offset.owner = self
-        self.$units.owner = self
-        self.$baseUnits.owner = self
-        self.$messageNumber.owner = self
-        self.$fieldNumber.owner = self
+        self._dataIndex.owner = self
+        self._definitionNumber.owner = self
+        self._baseTypeId.owner = self
+        self._fieldName.owner = self
+        self._scale.owner = self
+        self._offset.owner = self
+        self._units.owner = self
+        self._baseUnits.owner = self
+        self._messageNumber.owner = self
+        self._fieldNumber.owner = self
     }
     
     public convenience init(dataIndex: UInt8?,
@@ -146,7 +146,7 @@ open class FieldDescriptionMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -166,7 +166,7 @@ open class FieldDescriptionMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
 }
 

@@ -127,6 +127,11 @@ public struct FitFileDecoder {
             throw FitDecodingError.duplicateFitMessage
         }
 
+        // Message decoding does not read the receiver's state, so one instance per message
+        // type decodes every data message of that type
+        let messageTypes = Dictionary(uniqueKeysWithValues: messages.map { ($0.globalMessageNumber(), $0) })
+        var prototypes = [UInt16: FitMessage]()
+
         let shouldValidate: Bool
         switch crcCheckingStrategy {
         case .ignore:
@@ -138,6 +143,7 @@ public struct FitFileDecoder {
         messageData = try readFitFile(data: data, validateCrc: shouldValidate).get()
         
         var decoder = DecodeData()
+        var accumulator = FitAccumulator()
         var previousTimestamp: UInt32?
 
         repeat {
@@ -210,10 +216,15 @@ public struct FitFileDecoder {
                     previousTimestamp = timestamp
                 }
 
-                guard let messageType = messages.first(where: {
-                    $0.globalMessageNumber() == definition.globalMessageNumber
-                })?.init() else {
+                guard let messageClass = messageTypes[definition.globalMessageNumber] else {
                     continue
+                }
+                let messageType: FitMessage
+                if let prototype = prototypes[definition.globalMessageNumber] {
+                    messageType = prototype
+                } else {
+                    messageType = messageClass.init()
+                    prototypes[definition.globalMessageNumber] = messageType
                 }
 
                 let fieldData = FieldData(fieldData: stdData, developerFieldData: devData)
@@ -235,6 +246,7 @@ public struct FitFileDecoder {
                             fieldsDescriptions: fieldDescriptions
                         )
                         message.developerValues = devData
+                        (message as? RecordMessage)?.expandComponents(using: &accumulator)
                         decoded?(message)
                     }
                 case .failure(let error):
@@ -359,5 +371,54 @@ private extension FitFileDecoder {
         }
 
         return.success(msgData)
+    }
+}
+
+/// Running totals for accumulated component fields, keyed by message and destination field
+///
+/// Matches the Garmin FIT SDK Accumulator: a component holds the low bits of a counter, and
+/// each new value adds its difference from the previous one modulo the component width.
+internal struct FitAccumulator {
+
+    private struct Key: Hashable {
+        let message: UInt16
+        let field: UInt8
+    }
+
+    private struct Entry {
+        var lastValue: UInt64 = 0
+        var accumulatedValue: UInt64 = 0
+    }
+
+    private var entries = [Key: Entry]()
+
+    /// Adds a component value and returns the running total
+    ///
+    /// - Parameters:
+    ///   - value: Raw component value
+    ///   - bits: Component width in bits
+    ///   - message: Global message number
+    ///   - field: Destination field number
+    /// - Returns: Accumulated raw value
+    mutating func accumulate(_ value: UInt64, bits: UInt8, message: UInt16, field: UInt8) -> UInt64 {
+        let key = Key(message: message, field: field)
+        var entry = entries[key] ?? Entry()
+        let mask: UInt64 = (1 << UInt64(bits)) - 1
+
+        entry.accumulatedValue &+= (value &- entry.lastValue) & mask
+        entry.lastValue = value
+        entries[key] = entry
+
+        return entry.accumulatedValue
+    }
+
+    /// Restarts the running total from a message that carries the destination field itself
+    ///
+    /// - Parameters:
+    ///   - value: Destination value in component units
+    ///   - message: Global message number
+    ///   - field: Destination field number
+    mutating func set(_ value: UInt64, message: UInt16, field: UInt8) {
+        entries[Key(message: message, field: field)] = Entry(lastValue: value, accumulatedValue: value)
     }
 }

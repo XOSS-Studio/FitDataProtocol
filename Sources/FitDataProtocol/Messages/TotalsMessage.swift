@@ -92,16 +92,16 @@ open class TotalsMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$timeStamp.owner = self
-        self.$messageIndex.owner = self
+        self._timeStamp.owner = self
+        self._messageIndex.owner = self
         
-        self.$timerTime.owner = self
-        self.$distance.owner = self
-        self.$calories.owner = self
-        self.$sport.owner = self
-        self.$elapsedTime.owner = self
-        self.$sessions.owner = self
-        self.$activeTime.owner = self
+        self._timerTime.owner = self
+        self._distance.owner = self
+        self._calories.owner = self
+        self._sport.owner = self
+        self._elapsedTime.owner = self
+        self._sessions.owner = self
+        self._activeTime.owner = self
     }
     
     public convenience init(timeStamp: FitTime? = nil,
@@ -132,7 +132,7 @@ open class TotalsMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -152,7 +152,7 @@ open class TotalsMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

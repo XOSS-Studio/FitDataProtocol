@@ -84,10 +84,7 @@ extension FixedWidthInteger {
             value = (Double(self) * (1 / resolution.scale)) - resolution.offset
         }
 
-        guard value >= Double(T.min) else { return T.min }
-        guard value <= Double(T.max) else { return T.max }
-
-        return T(value)
+        return quantized(value, direction)
     }
 }
 
@@ -125,10 +122,7 @@ extension Double: Resolutionable, FixedWidthIntegerResolutionable {
             value = (Double(self) * (1 / resolution.scale)) - resolution.offset
         }
 
-        guard value >= Double(T.min) else { return T.min }
-        guard value <= Double(T.max) else { return T.max }
-
-        return T(value)
+        return quantized(value, direction)
     }
 }
 
@@ -239,29 +233,6 @@ extension UInt32: Resolutionable, FixedWidthIntegerResolutionable {
             return (Double(self) * (1 / resolution.scale)) - resolution.offset
         }
     }
-    
-    /// Apply Resolution With Direction
-    ///
-    /// - Parameters:
-    ///   - type: Type to resolve to
-    ///   - direction: Resolution Direction
-    ///   - resolution: Resolution
-    /// - Returns: Number with Resolution Applied
-    public func resolution<T>(type: T.Type, _ direction: ResolutionDirection, resolution: Resolution) -> T where T: FixedWidthInteger {
-        var value = Double(T.min)
-        
-        switch direction {
-        case .adding:
-            value = (Double(self) + resolution.offset) * resolution.scale
-        case .removing:
-            value = (Double(self) * (1 / resolution.scale)) - resolution.offset
-        }
-        
-        guard value >= Double(T.min) else { return T.min }
-        guard value <= Double(T.max) else { return T.max }
-        
-        return T(value)
-    }
 }
 
 extension Int32: Resolutionable {
@@ -318,4 +289,18 @@ extension UInt64: Resolutionable {
         }
     }
     
+}
+
+/// Converts a value with resolution applied to an integer type, clamping to the type's range.
+///
+/// Encoding rounds half away from zero, matching the Garmin FIT SDK, so a value on the field's
+/// scale is not shifted down by floating point error. Decoding keeps truncation.
+private func quantized<T>(_ value: Double, _ direction: ResolutionDirection) -> T where T: FixedWidthInteger {
+    let value = direction == .adding ? value.rounded() : value
+
+    guard value >= Double(T.min) else { return T.min }
+    // Double(T.max) rounds up to 2^64 / 2^63 for 64 bit types, so the bound is exclusive
+    guard value < Double(T.max) else { return T.max }
+
+    return T(value)
 }

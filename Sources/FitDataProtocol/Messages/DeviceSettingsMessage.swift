@@ -166,27 +166,27 @@ open class DeviceSettingsMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$activeTimeZone.owner = self
-        self.$utcOffset.owner = self
-        self.$timeMode.owner = self
-        self.$timeZoneOffset.owner = self
-        self.$backLightMode.owner = self
-        self.$activityTrackerEnabled.owner = self
-        self.$clockTime.owner = self
-        self.$pagesEnabled.owner = self
-        self.$dateMode.owner = self
-        self.$displayOrientation.owner = self
-        self.$mountingSide.owner = self
-        self.$defaultPage.owner = self
-        self.$autosyncMinimumSteps.owner = self
-        self.$autosyncMinimumTime.owner = self
-        self.$lactateThresholdAutodetectEnabled.owner = self
-        self.$bleAutoUploadEnabled.owner = self
-        self.$autoSyncFrequency.owner = self
-        self.$autoActivityDetect.owner = self
-        self.$numberOfScreens.owner = self
-        self.$smartNotificationDisplayOrientation.owner = self
-        self.$tapInterface.owner = self
+        self._activeTimeZone.owner = self
+        self._utcOffset.owner = self
+        self._timeMode.owner = self
+        self._timeZoneOffset.owner = self
+        self._backLightMode.owner = self
+        self._activityTrackerEnabled.owner = self
+        self._clockTime.owner = self
+        self._pagesEnabled.owner = self
+        self._dateMode.owner = self
+        self._displayOrientation.owner = self
+        self._mountingSide.owner = self
+        self._defaultPage.owner = self
+        self._autosyncMinimumSteps.owner = self
+        self._autosyncMinimumTime.owner = self
+        self._lactateThresholdAutodetectEnabled.owner = self
+        self._bleAutoUploadEnabled.owner = self
+        self._autoSyncFrequency.owner = self
+        self._autoActivityDetect.owner = self
+        self._numberOfScreens.owner = self
+        self._smartNotificationDisplayOrientation.owner = self
+        self._tapInterface.owner = self
     }
     
     public convenience init(timeMode: TimeMode? = nil,
@@ -241,7 +241,7 @@ open class DeviceSettingsMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -261,7 +261,7 @@ open class DeviceSettingsMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

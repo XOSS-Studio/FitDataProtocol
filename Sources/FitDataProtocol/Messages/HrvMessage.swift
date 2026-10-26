@@ -50,7 +50,7 @@ open class HrvMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$hrvData.owner = self
+        self._hrvData.owner = self
     }
     
     public convenience init(hrv: [Measurement<UnitDuration>]) {
@@ -86,7 +86,7 @@ open class HrvMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -106,7 +106,7 @@ open class HrvMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

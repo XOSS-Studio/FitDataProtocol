@@ -101,19 +101,19 @@ open class ConnectivityMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$bluetoothEnabled.owner = self
-        self.$bluetoothLowEnergyEnable.owner = self
-        self.$antEnabled.owner = self
-        self.$name.owner = self
-        self.$liveTrackingEnabled.owner = self
-        self.$weatherConditionsEnabled.owner = self
-        self.$weatherAlertsEnabled.owner = self
-        self.$autoActivityUploadEnabled.owner = self
-        self.$courseDownloadEnabled.owner = self
-        self.$workoutDownloadEnabled.owner = self
-        self.$gpsEphemerisDownloadEnabled.owner = self
-        self.$incidentDetectionEnabled.owner = self
-        self.$groupTrackEnabled.owner = self
+        self._bluetoothEnabled.owner = self
+        self._bluetoothLowEnergyEnable.owner = self
+        self._antEnabled.owner = self
+        self._name.owner = self
+        self._liveTrackingEnabled.owner = self
+        self._weatherConditionsEnabled.owner = self
+        self._weatherAlertsEnabled.owner = self
+        self._autoActivityUploadEnabled.owner = self
+        self._courseDownloadEnabled.owner = self
+        self._workoutDownloadEnabled.owner = self
+        self._gpsEphemerisDownloadEnabled.owner = self
+        self._incidentDetectionEnabled.owner = self
+        self._groupTrackEnabled.owner = self
     }
     
     public convenience init(bluetoothEnabled: Bool? = nil,
@@ -151,7 +151,7 @@ open class ConnectivityMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -171,7 +171,7 @@ open class ConnectivityMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

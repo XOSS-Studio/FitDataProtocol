@@ -428,58 +428,58 @@ open class RecordMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$timeStamp.owner = self
+        self._timeStamp.owner = self
         
-        self.$latitude.owner = self
-        self.$longitude.owner = self
-        self.$_altitude.owner = self
-        self.$enhancedAltitude.owner = self
-        self.$heartRate.owner = self
-        self.$cadence.owner = self
-        self.$distance.owner = self
-        self.$_speed.owner = self
-        self.$enhancedSpeed.owner = self
-        self.$power.owner = self
-        self.$compressedSpeedDistance.owner = self
-        self.$grade.owner = self
-        self.$resistance.owner = self
-        self.$timeFromCourse.owner = self
-        self.$cycleLength.owner = self
-        self.$temperature.owner = self
-        self.$speedOneSecData.owner = self
-        self.$cycles.owner = self
-        self.$totalCycles.owner = self
-        self.$compressedAccumulatedPower.owner = self
-        self.$_accumulatedPower.owner = self
-        self.$leftRightBalance.owner = self
-        self.$gpsAccuracy.owner = self
-        self.$verticalSpeed.owner = self
-        self.$calories.owner = self
-        self.$verticalOscillation.owner = self
-        self.$stanceTimePercent.owner = self
-        self.$stanceTimeDuration.owner = self
-        self.$stanceTimeBalance.owner = self
-        self.$activity.owner = self
-        self.$leftTorqueEffectiveness.owner = self
-        self.$rightTorqueEffectiveness.owner = self
-        self.$leftPedalSmoothness.owner = self
-        self.$rightPedalSmoothness.owner = self
-        self.$combinedPedalSmoothness.owner = self
-        self.$time128Second.owner = self
-        self.$stroke.owner = self
-        self.$zone.owner = self
-        self.$ballSpeed.owner = self
-        self.$cadence256.owner = self
-        self.$fractionalCadence.owner = self
-        self.$totalHemoglobinConcentration.owner = self
-        self.$totalHemoglobinConcentrationMin.owner = self
-        self.$totalHemoglobinConcentrationMax.owner = self
-        self.$saturatedHemoglobinPercent.owner = self
-        self.$saturatedHemoglobinPercentMin.owner = self
-        self.$saturatedHemoglobinPercentMax.owner = self
-        self.$deviceIndex.owner = self
-        self.$grit.owner = self
-        self.$flow.owner = self
+        self._latitude.owner = self
+        self._longitude.owner = self
+        self.__altitude.owner = self
+        self._enhancedAltitude.owner = self
+        self._heartRate.owner = self
+        self._cadence.owner = self
+        self._distance.owner = self
+        self.__speed.owner = self
+        self._enhancedSpeed.owner = self
+        self._power.owner = self
+        self._compressedSpeedDistance.owner = self
+        self._grade.owner = self
+        self._resistance.owner = self
+        self._timeFromCourse.owner = self
+        self._cycleLength.owner = self
+        self._temperature.owner = self
+        self._speedOneSecData.owner = self
+        self._cycles.owner = self
+        self._totalCycles.owner = self
+        self._compressedAccumulatedPower.owner = self
+        self.__accumulatedPower.owner = self
+        self._leftRightBalance.owner = self
+        self._gpsAccuracy.owner = self
+        self._verticalSpeed.owner = self
+        self._calories.owner = self
+        self._verticalOscillation.owner = self
+        self._stanceTimePercent.owner = self
+        self._stanceTimeDuration.owner = self
+        self._stanceTimeBalance.owner = self
+        self._activity.owner = self
+        self._leftTorqueEffectiveness.owner = self
+        self._rightTorqueEffectiveness.owner = self
+        self._leftPedalSmoothness.owner = self
+        self._rightPedalSmoothness.owner = self
+        self._combinedPedalSmoothness.owner = self
+        self._time128Second.owner = self
+        self._stroke.owner = self
+        self._zone.owner = self
+        self._ballSpeed.owner = self
+        self._cadence256.owner = self
+        self._fractionalCadence.owner = self
+        self._totalHemoglobinConcentration.owner = self
+        self._totalHemoglobinConcentrationMin.owner = self
+        self._totalHemoglobinConcentrationMax.owner = self
+        self._saturatedHemoglobinPercent.owner = self
+        self._saturatedHemoglobinPercentMin.owner = self
+        self._saturatedHemoglobinPercentMax.owner = self
+        self._deviceIndex.owner = self
+        self._grit.owner = self
+        self._flow.owner = self
     }
     
     public convenience init(timeStamp: FitTime? = nil,
@@ -578,7 +578,7 @@ open class RecordMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -598,7 +598,7 @@ open class RecordMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage
@@ -694,5 +694,66 @@ private extension RecordMessage {
         }
         return speed.compactMap { $0 }
         
+    }
+}
+
+// MARK: - Component Expansion
+internal extension RecordMessage {
+
+    /// Expands compressed fields into the fields they encode, as the Garmin FIT SDK decoder does
+    ///
+    /// - compressed_speed_distance: speed (12 bits, 100 * m/s) and distance (12 bits, 16 * m, accumulated)
+    /// - compressed_accumulated_power: accumulated_power (16 bits, accumulated)
+    ///
+    /// Fields already present keep their values and restart the running totals. Expanded values are
+    /// written only for little endian messages, because field setters always encode little endian.
+    ///
+    /// - Parameter accumulator: Running totals shared by the messages of one file
+    func expandComponents(using accumulator: inout FitAccumulator) {
+        let message = RecordMessage.globalMessageNumber()
+        let distanceField: UInt8 = 5
+        let accumulatedPowerField: UInt8 = 29
+        let canWrite = self.architecture == .little
+
+        if let distance = self.distance {
+            let value = max(0, distance.converted(to: UnitLength.meters).value * 16)
+            accumulator.set(UInt64(value), message: message, field: distanceField)
+        }
+        if let accumulatedPower = self._accumulatedPower {
+            let value = max(0, accumulatedPower.converted(to: UnitPower.watts).value)
+            accumulator.set(UInt64(value), message: message, field: accumulatedPowerField)
+        }
+
+        // A byte array whose bytes are all 0xFF is invalid
+        if let compressed = self.compressedSpeedDistance,
+           compressed.count >= 3,
+           compressed.contains(where: { $0 != 0xFF }) {
+            let bytes = [UInt8](compressed.prefix(3))
+            let speedValue = UInt64(bytes[0]) | (UInt64(bytes[1] & 0x0F) << 8)
+            let distanceValue = UInt64(bytes[1] >> 4) | (UInt64(bytes[2]) << 4)
+            let totalDistance = accumulator.accumulate(distanceValue,
+                                                       bits: 12,
+                                                       message: message,
+                                                       field: distanceField)
+
+            if canWrite && self.enhancedSpeed == nil && self._speed == nil {
+                self.speed = Measurement(value: Double(speedValue) / 100, unit: UnitSpeed.metersPerSecond)
+            }
+            if canWrite && self.distance == nil {
+                self.distance = Measurement(value: Double(totalDistance) / 16, unit: UnitLength.meters)
+            }
+        }
+
+        if let compressedPower = self.compressedAccumulatedPower {
+            let value = max(0, compressedPower.converted(to: UnitPower.watts).value)
+            let totalPower = accumulator.accumulate(UInt64(value),
+                                                    bits: 16,
+                                                    message: message,
+                                                    field: accumulatedPowerField)
+
+            if canWrite && self._accumulatedPower == nil {
+                self._accumulatedPower = Measurement(value: Double(totalPower), unit: UnitPower.watts)
+            }
+        }
     }
 }

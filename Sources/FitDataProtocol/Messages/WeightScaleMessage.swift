@@ -118,20 +118,20 @@ open class WeightScaleMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$timeStamp.owner = self
+        self._timeStamp.owner = self
         
-        self.$weight.owner = self
-        self.$percentFat.owner = self
-        self.$percentHydration.owner = self
-        self.$visceralFatMass.owner = self
-        self.$boneMass.owner = self
-        self.$muscleMass.owner = self
-        self.$basalMet.owner = self
-        self.$physiqueRating.owner = self
-        self.$activeMet.owner = self
-        self.$metabolicAge.owner = self
-        self.$visceralFatRating.owner = self
-        self.$userProfileIndex.owner = self
+        self._weight.owner = self
+        self._percentFat.owner = self
+        self._percentHydration.owner = self
+        self._visceralFatMass.owner = self
+        self._boneMass.owner = self
+        self._muscleMass.owner = self
+        self._basalMet.owner = self
+        self._physiqueRating.owner = self
+        self._activeMet.owner = self
+        self._metabolicAge.owner = self
+        self._visceralFatRating.owner = self
+        self._userProfileIndex.owner = self
     }
     
     public convenience init(timeStamp: FitTime? = nil,
@@ -178,7 +178,7 @@ open class WeightScaleMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -198,7 +198,7 @@ open class WeightScaleMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

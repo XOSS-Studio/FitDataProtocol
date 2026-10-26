@@ -57,10 +57,10 @@ open class CourseMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$sport.owner = self
-        self.$name.owner = self
-        self.$capabilities.owner = self
-        self.$subSport.owner = self
+        self._sport.owner = self
+        self._name.owner = self
+        self._capabilities.owner = self
+        self._subSport.owner = self
     }
     
     public convenience init(name: String? = nil,
@@ -81,7 +81,7 @@ open class CourseMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -101,7 +101,7 @@ open class CourseMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

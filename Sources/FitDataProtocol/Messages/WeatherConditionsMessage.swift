@@ -139,23 +139,23 @@ open class WeatherConditionsMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$timeStamp.owner = self
+        self._timeStamp.owner = self
         
-        self.$report.owner = self
-        self.$temperature.owner = self
-        self.$condition.owner = self
-        self.$windDirection.owner = self
-        self.$windSpeed.owner = self
-        self.$precipitationProbability.owner = self
-        self.$feelsLikeTemperature.owner = self
-        self.$relativeHumidity.owner = self
-        self.$location.owner = self
-        self.$observedTime.owner = self
-        self.$latitude.owner = self
-        self.$longitude.owner = self
-        self.$dayOfWeek.owner = self
-        self.$highTemperature.owner = self
-        self.$lowTemperature.owner = self
+        self._report.owner = self
+        self._temperature.owner = self
+        self._condition.owner = self
+        self._windDirection.owner = self
+        self._windSpeed.owner = self
+        self._precipitationProbability.owner = self
+        self._feelsLikeTemperature.owner = self
+        self._relativeHumidity.owner = self
+        self._location.owner = self
+        self._observedTime.owner = self
+        self._latitude.owner = self
+        self._longitude.owner = self
+        self._dayOfWeek.owner = self
+        self._highTemperature.owner = self
+        self._lowTemperature.owner = self
     }
     
     public convenience init(timeStamp: FitTime? = nil,
@@ -203,7 +203,7 @@ open class WeatherConditionsMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -223,7 +223,7 @@ open class WeatherConditionsMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

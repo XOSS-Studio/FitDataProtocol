@@ -24,6 +24,19 @@ class FitMessageTests: XCTestCase {
         ("testWeightScaleMessage", testWeightScaleMessage),
         ("testZonesTargetMessage", testZonesTargetMessage),
         ("testSessionMessageDescentAndTrainingLoad", testSessionMessageDescentAndTrainingLoad),
+        ("testFloatBaseTypesEncodeIEEE754", testFloatBaseTypesEncodeIEEE754),
+        ("testRecordFloatFieldsRoundTrip", testRecordFloatFieldsRoundTrip),
+        ("testMultibyteStringFieldRoundTrip", testMultibyteStringFieldRoundTrip),
+        ("testOverlongStringFieldIsNotEncoded", testOverlongStringFieldIsNotEncoded),
+        ("testEncodingRoundsHalfAwayFromZero", testEncodingRoundsHalfAwayFromZero),
+        ("testStringFieldIncludesTerminator", testStringFieldIncludesTerminator),
+        ("testCompressedSpeedDistanceExpansion", testCompressedSpeedDistanceExpansion),
+        ("testCompressedAccumulatedPowerExpansion", testCompressedAccumulatedPowerExpansion),
+        ("testDecoderExpandsCompressedSpeedDistance", testDecoderExpandsCompressedSpeedDistance),
+        ("testEncodingClampsToSixtyFourBitRange", testEncodingClampsToSixtyFourBitRange),
+        ("testComponentExpansionSkipsBigEndianMessages", testComponentExpansionSkipsBigEndianMessages),
+        ("testComponentExpansionKeepsExistingDistance", testComponentExpansionKeepsExistingDistance),
+        ("testDecodingMismatchedTypesReturnsNil", testDecodingMismatchedTypesReturnsNil),
     ]
 }
 
@@ -379,4 +392,241 @@ extension FitMessageTests {
         }
     }
     
+}
+
+extension FitMessageTests {
+
+    func testFloatBaseTypesEncodeIEEE754() throws {
+        let identity = Resolution(scale: 1.0, offset: 0.0)
+
+        let float32 = try BaseType.float32.encodedResolution(value: -1.5, resolution: identity).get()
+        XCTAssertEqual(float32, Data(from: Float32(-1.5).bitPattern.littleEndian))
+
+        let float64 = try BaseType.float64.encodedResolution(value: 2.25, resolution: identity).get()
+        XCTAssertEqual(float64, Data(from: Double(2.25).bitPattern.littleEndian))
+    }
+
+    func testRecordFloatFieldsRoundTrip() throws {
+        let record = RecordMessage(grit: Measurement(value: 1.5, unit: UnitFitGrit.kiloGrit),
+                                   flow: Measurement(value: -0.25, unit: UnitFitFlow.flow))
+
+        let grit = try XCTUnwrap(record.grit)
+        XCTAssertEqual(grit.value, 1.5, accuracy: 0.0001)
+        let flow = try XCTUnwrap(record.flow)
+        XCTAssertEqual(flow.value, -0.25, accuracy: 0.0001)
+    }
+
+    func testMultibyteStringFieldRoundTrip() throws {
+        let fileId = FileIdMessage(deviceSerialNumber: 1,
+                                   fileCreationDate: FitTime(date: Date()),
+                                   manufacturer: Manufacturer.garmin,
+                                   product: 1,
+                                   fileType: FileType.activity,
+                                   productName: "行者码表")
+        let record = RecordMessage(timeStamp: FitTime(date: Date()))
+
+        let data = try FitFileEncoder(dataValidityStrategy: .none)
+            .encode(fildIdMessage: fileId, messages: [record])
+            .get()
+
+        var decodedName: String?
+        var decoder = FitFileDecoder(crcCheckingStrategy: .throws)
+        try decoder.decode(data: data, messages: FitFileDecoder.defaultMessages) { message in
+            if let message = message as? FileIdMessage {
+                decodedName = message.productName
+            }
+        }
+        XCTAssertEqual(decodedName, "行者码表")
+    }
+
+    func testOverlongStringFieldIsNotEncoded() {
+        // 100 Characters but 300 UTF-8 bytes, more than a one byte field size can declare
+        let fileId = FileIdMessage(productName: String(repeating: "行", count: 100))
+
+        XCTAssertNil(fileId.productName)
+    }
+}
+
+extension FitMessageTests {
+
+    func testEncodingRoundsHalfAwayFromZero() throws {
+        let altitude = Resolution(scale: 5.0, offset: 500.0)
+        let encodedAltitude = try BaseType.uint16.encodedResolution(value: 12.5, resolution: altitude).get()
+        XCTAssertEqual(encodedAltitude, Data(from: UInt16(2563).littleEndian))
+
+        let grade = Resolution(scale: 100.0, offset: 0.0)
+        let encodedGrade = try BaseType.sint16.encodedResolution(value: -9.125, resolution: grade).get()
+        XCTAssertEqual(encodedGrade, Data(from: Int16(-913).littleEndian))
+
+        // 0.57 * 100 is 56.99999999999999 in binary floating point
+        let distance = Resolution(scale: 100.0, offset: 0.0)
+        let encodedDistance = try BaseType.uint32.encodedResolution(value: 0.57, resolution: distance).get()
+        XCTAssertEqual(encodedDistance, Data(from: UInt32(57).littleEndian))
+    }
+
+    func testEncodingClampsToSixtyFourBitRange() throws {
+        // Double(UInt64.max) is 2^64 and Double(Int64.max) is 2^63, one past each type's range
+        let identity = Resolution(scale: 1.0, offset: 0.0)
+        let unsigned = try BaseType.uint64.encodedResolution(value: Double(UInt64.max), resolution: identity).get()
+        XCTAssertEqual(unsigned, Data(from: UInt64.max.littleEndian))
+
+        let signed = try BaseType.sint64.encodedResolution(value: Double(Int64.max), resolution: identity).get()
+        XCTAssertEqual(signed, Data(from: Int64.max.littleEndian))
+    }
+
+    func testDecodingMismatchedTypesReturnsNil() {
+        let identity = Resolution(scale: 1.0, offset: 0.0)
+
+        // Float fields decode through Double and are narrowed instead of force cast
+        let floatBase = BaseTypeData(type: .float32, resolution: identity)
+        let floatData = Data(from: Float32(1.5).bitPattern.littleEndian)
+        XCTAssertEqual(Float.decode(type: Float.self, data: floatData, base: floatBase, arch: .little), 1.5)
+
+        // A requested type that does not match the base type yields nil rather than a crash
+        let text = Data([0x41, 0x00])
+        XCTAssertNil(BaseType.string.decode(type: UInt8.self, data: text, resolution: identity, arch: .little))
+        XCTAssertNil(BaseType.string.decode(type: String.self, data: Data([0x41]), resolution: identity, arch: .little))
+        XCTAssertEqual(BaseType.string.decode(type: String.self, data: text, resolution: identity, arch: .little), "A")
+    }
+
+    func testStringFieldIncludesTerminator() {
+        let fileId = FileIdMessage(productName: "iOS")
+        XCTAssertEqual(fileId.fieldDict[8]?.size, 4)
+        XCTAssertEqual(fileId.fieldDataDict[8], Data([0x69, 0x4F, 0x53, 0x00]))
+        XCTAssertEqual(fileId.productName, "iOS")
+
+        // 254 bytes plus the terminator is the largest string a field can hold
+        XCTAssertNotNil(FileIdMessage(productName: String(repeating: "a", count: 254)).productName)
+        XCTAssertNil(FileIdMessage(productName: String(repeating: "a", count: 255)).productName)
+    }
+
+    func testCompressedSpeedDistanceExpansion() {
+        var accumulator = FitAccumulator()
+        let records = [
+            compressedSpeedDistanceRecord(speed: 700, distance: 4_000),
+            compressedSpeedDistanceRecord(speed: 650, distance: 50),
+            compressedSpeedDistanceRecord(speed: 600, distance: 100),
+        ]
+        for record in records {
+            record.expandComponents(using: &accumulator)
+        }
+
+        XCTAssertEqual(records[0].speed?.converted(to: UnitSpeed.metersPerSecond).value ?? 0, 7, accuracy: 0.001)
+        XCTAssertEqual(records[2].speed?.converted(to: UnitSpeed.metersPerSecond).value ?? 0, 6, accuracy: 0.001)
+
+        // The 12 bit distance counter wraps after 4095: 4000, then +146, then +50 (in 1/16 m)
+        let distances = records.map { $0.distance?.converted(to: UnitLength.meters).value ?? -1 }
+        XCTAssertEqual(distances[0], 250, accuracy: 0.01)
+        XCTAssertEqual(distances[1], 259.125, accuracy: 0.01)
+        XCTAssertEqual(distances[2], 262.25, accuracy: 0.01)
+    }
+
+    func testCompressedAccumulatedPowerExpansion() {
+        var accumulator = FitAccumulator()
+        let first = compressedAccumulatedPowerRecord(65_000)
+        let wrapped = compressedAccumulatedPowerRecord(500)
+        let full = RecordMessage(accumulatedPower: Measurement(value: 70_000, unit: UnitPower.watts))
+        let afterFull = compressedAccumulatedPowerRecord(4_964)
+        for record in [first, wrapped, full, afterFull] {
+            record.expandComponents(using: &accumulator)
+        }
+
+        XCTAssertEqual(first.accumulatedPower?.value ?? 0, 65_000, accuracy: 0.5)
+        XCTAssertEqual(wrapped.accumulatedPower?.value ?? 0, 66_036, accuracy: 0.5)
+        XCTAssertEqual(full.accumulatedPower?.value ?? 0, 70_000, accuracy: 0.5)
+        // A record carrying accumulated_power restarts the total: 70000 & 0xFFFF = 4464, then +500
+        XCTAssertEqual(afterFull.accumulatedPower?.value ?? 0, 70_500, accuracy: 0.5)
+    }
+
+    func testDecoderExpandsCompressedSpeedDistance() throws {
+        let fileId = FileIdMessage(deviceSerialNumber: 1,
+                                   fileCreationDate: FitTime(date: Date()),
+                                   manufacturer: Manufacturer.garmin,
+                                   product: 1,
+                                   fileType: FileType.activity)
+        let messages = [
+            compressedSpeedDistanceRecord(speed: 700, distance: 4_000),
+            compressedSpeedDistanceRecord(speed: 700, distance: 50),
+        ]
+
+        let data = try FitFileEncoder(dataValidityStrategy: .none)
+            .encode(fildIdMessage: fileId, messages: messages)
+            .get()
+
+        var decodedRecords = [RecordMessage]()
+        var decoder = FitFileDecoder(crcCheckingStrategy: .throws)
+        try decoder.decode(data: data, messages: [RecordMessage.self]) { message in
+            if let record = message as? RecordMessage {
+                decodedRecords.append(record)
+            }
+        }
+        let distances = decodedRecords.compactMap { $0.distance?.converted(to: UnitLength.meters).value }
+
+        // The decoder reuses one prototype per message type, but every data message is a new instance
+        XCTAssertEqual(decodedRecords.count, 2)
+        XCTAssertFalse(decodedRecords.first === decodedRecords.last)
+        XCTAssertEqual(distances.count, 2)
+        XCTAssertEqual(distances.first ?? 0, 250, accuracy: 0.01)
+        XCTAssertEqual(distances.last ?? 0, 259.125, accuracy: 0.01)
+    }
+
+    func testComponentExpansionSkipsBigEndianMessages() {
+        var accumulator = FitAccumulator()
+        let bigEndian = compressedSpeedDistanceRecord(speed: 700, distance: 4_000, architecture: .big)
+        let next = compressedSpeedDistanceRecord(speed: 650, distance: 50)
+        for record in [bigEndian, next] {
+            record.expandComponents(using: &accumulator)
+        }
+
+        // Setters encode little endian, so a big endian message is left unexpanded
+        XCTAssertNil(bigEndian.speed)
+        XCTAssertNil(bigEndian.distance)
+        // Its counter still advances the running total: 4000, then +146 (in 1/16 m)
+        XCTAssertEqual(next.distance?.converted(to: UnitLength.meters).value ?? -1, 259.125, accuracy: 0.01)
+    }
+
+    func testComponentExpansionKeepsExistingDistance() {
+        var accumulator = FitAccumulator()
+        // 300 m is 4800 / 16 m, whose low 12 bits are 704; the compressed 712 would expand to 300.5 m
+        let withDistance = compressedSpeedDistanceRecord(speed: 700, distance: 712, meters: 300)
+        let next = compressedSpeedDistanceRecord(speed: 700, distance: 812)
+        for record in [withDistance, next] {
+            record.expandComponents(using: &accumulator)
+        }
+
+        XCTAssertEqual(withDistance.distance?.converted(to: UnitLength.meters).value ?? -1, 300, accuracy: 0.01)
+        XCTAssertEqual(withDistance.speed?.converted(to: UnitSpeed.metersPerSecond).value ?? 0, 7, accuracy: 0.001)
+        // The total restarts from 4800, advances by 8 to 4808, then +100
+        XCTAssertEqual(next.distance?.converted(to: UnitLength.meters).value ?? -1, 306.75, accuracy: 0.01)
+    }
+
+    private func compressedSpeedDistanceRecord(speed: UInt16,
+                                               distance: UInt16,
+                                               meters: Double? = nil,
+                                               architecture: Endian = .little) -> RecordMessage {
+        let bytes: [UInt8] = [
+            UInt8(speed & 0xFF),
+            UInt8((speed >> 8) & 0x0F) | UInt8((distance & 0x0F) << 4),
+            UInt8(distance >> 4),
+        ]
+        var fieldDict = [UInt8: FieldDefinition]()
+        var fieldDataDict = [UInt8: Data]()
+        fieldDict[8] = FieldDefinition(fieldDefinitionNumber: 8,
+                                       size: 3,
+                                       type: BaseTypeData(type: .byte, resolution: Resolution(scale: 1.0, offset: 0.0)))
+        fieldDataDict[8] = Data(bytes)
+        if let meters = meters {
+            // distance is uint32, 100 * m
+            fieldDict[5] = FieldDefinition(fieldDefinitionNumber: 5,
+                                           type: BaseTypeData(type: .uint32, resolution: Resolution(scale: 100.0, offset: 0.0)))
+            fieldDataDict[5] = Data(from: UInt32(meters * 100).littleEndian)
+        }
+        return RecordMessage(fieldDict: fieldDict, fieldDataDict: fieldDataDict, architecture: architecture)
+    }
+
+    private func compressedAccumulatedPowerRecord(_ watts: UInt16) -> RecordMessage {
+        let definition = FieldDefinition(fieldDefinitionNumber: 28,
+                                         type: BaseTypeData(type: .uint16, resolution: Resolution(scale: 1.0, offset: 0.0)))
+        return RecordMessage(fieldDict: [28: definition], fieldDataDict: [28: Data(from: watts.littleEndian)], architecture: .little)
+    }
 }

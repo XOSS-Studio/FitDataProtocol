@@ -82,15 +82,15 @@ open class ActivityMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$timeStamp.owner = self
+        self._timeStamp.owner = self
         
-        self.$totalTimerTime.owner = self
-        self.$numberOfSessions.owner = self
-        self.$activity.owner = self
-        self.$event.owner = self
-        self.$eventType.owner = self
-        self.$localTimeStamp.owner = self
-        self.$eventGroup.owner = self
+        self._totalTimerTime.owner = self
+        self._numberOfSessions.owner = self
+        self._activity.owner = self
+        self._event.owner = self
+        self._eventType.owner = self
+        self._localTimeStamp.owner = self
+        self._eventGroup.owner = self
     }
     
     public convenience init(timeStamp: FitTime? = nil,
@@ -119,7 +119,7 @@ open class ActivityMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -139,7 +139,7 @@ open class ActivityMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

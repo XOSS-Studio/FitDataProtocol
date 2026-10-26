@@ -62,12 +62,12 @@ open class HeartrateProfileMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$messageIndex.owner = self
+        self._messageIndex.owner = self
         
-        self.$enabled.owner = self
-        self.$antID.owner = self
-        self.$logHrv.owner = self
-        self.$transmissionType.owner = self
+        self._enabled.owner = self
+        self._antID.owner = self
+        self._logHrv.owner = self
+        self._transmissionType.owner = self
     }
     
     public convenience init(messageIndex: MessageIndex? = nil,
@@ -90,7 +90,7 @@ open class HeartrateProfileMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -110,7 +110,7 @@ open class HeartrateProfileMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

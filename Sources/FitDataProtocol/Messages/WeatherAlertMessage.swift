@@ -73,13 +73,13 @@ open class WeatherAlertMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$timeStamp.owner = self
+        self._timeStamp.owner = self
         
-        self.$reportID.owner = self
-        self.$issueTime.owner = self
-        self.$expireTime.owner = self
-        self.$severity.owner = self
-        self.$alertType.owner = self
+        self._reportID.owner = self
+        self._issueTime.owner = self
+        self._expireTime.owner = self
+        self._severity.owner = self
+        self._alertType.owner = self
     }
     
     public convenience init(timeStamp: FitTime? = nil,
@@ -104,7 +104,7 @@ open class WeatherAlertMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -124,7 +124,7 @@ open class WeatherAlertMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

@@ -82,13 +82,13 @@ open class ScheduleMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$manufacturer.owner = self
-        self.$product.owner = self
-        self.$serialNumber.owner = self
-        self.$timeCreated.owner = self
-        self.$completed.owner = self
-        self.$scheduleType.owner = self
-        self.$scheduledTime.owner = self
+        self._manufacturer.owner = self
+        self._product.owner = self
+        self._serialNumber.owner = self
+        self._timeCreated.owner = self
+        self._completed.owner = self
+        self._scheduleType.owner = self
+        self._scheduledTime.owner = self
     }
     
     public convenience init(manufacturer: Manufacturer? = nil,
@@ -115,7 +115,7 @@ open class ScheduleMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -135,7 +135,7 @@ open class ScheduleMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

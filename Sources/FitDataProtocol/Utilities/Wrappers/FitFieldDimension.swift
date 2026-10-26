@@ -28,9 +28,13 @@ import Foundation
 ///
 /// Properpty Wrapper for Standard FIT Fields wrapped in a `Measurement<Dimension>`
 @propertyWrapper
-final public class FitFieldDimension<U: Dimension>: FieldWrapper {
+public struct FitFieldDimension<U: Dimension>: FieldWrapper {
     public typealias Value = Measurement<U>
     
+    /// Message whose field storage this wrapper reads and writes, set in the message's `init()`
+    ///
+    /// The wrapper is a value stored inside its message, so a message allocates no object per field.
+    /// The reference stays weak: a copy obtained through `$field` that outlives its message reads nil.
     weak internal var owner: FitMessage?
 
     /// Base Type
@@ -59,7 +63,7 @@ final public class FitFieldDimension<U: Dimension>: FieldWrapper {
 
             return nil
         }
-        set {
+        nonmutating set {
             func failure() {
                 // We remove these values
                 owner?.fieldDataDict.removeValue(forKey: self.fieldNumber)

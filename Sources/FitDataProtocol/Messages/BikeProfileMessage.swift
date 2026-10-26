@@ -254,39 +254,39 @@ open class BikeProfileMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$messageIndex.owner = self
+        self._messageIndex.owner = self
         
-        self.$name.owner = self
-        self.$sport.owner = self
-        self.$subSport.owner = self
-        self.$odometer.owner = self
-        self.$speedAntId.owner = self
-        self.$cadenceAntId.owner = self
-        self.$speedCadenceAntId.owner = self
-        self.$powerAntId.owner = self
-        self.$customWheelSize.owner = self
-        self.$autoWheelSize.owner = self
-        self.$bikeWeight.owner = self
-        self.$powerCalibrationFactor.owner = self
-        self.$autoWheelCalibration.owner = self
-        self.$autoPowerZero.owner = self
-        self.$id.owner = self
-        self.$speedEnabled.owner = nil
-        self.$cadenceEnabled.owner = nil
-        self.$speedCadenceEnabled.owner = nil
-        self.$powerEnabled.owner = self
-        self.$crankLength.owner = self
-        self.$enbled.owner = self
-        self.$speedTransmissionType.owner = self
-        self.$cadenceTransmissionType.owner = self
-        self.$speedCadenceTransmissionType.owner = self
-        self.$powerTransmissionType.owner = self
-        self.$odometerRollover.owner = self
-        self.$frontGears.owner = self
-        self.$_frontGearTeeth.owner = self
-        self.$rearGears.owner = self
-        self.$_rearGearTeeth.owner = self
-        self.$shimanoDi2Enabled.owner = self
+        self._name.owner = self
+        self._sport.owner = self
+        self._subSport.owner = self
+        self._odometer.owner = self
+        self._speedAntId.owner = self
+        self._cadenceAntId.owner = self
+        self._speedCadenceAntId.owner = self
+        self._powerAntId.owner = self
+        self._customWheelSize.owner = self
+        self._autoWheelSize.owner = self
+        self._bikeWeight.owner = self
+        self._powerCalibrationFactor.owner = self
+        self._autoWheelCalibration.owner = self
+        self._autoPowerZero.owner = self
+        self._id.owner = self
+        self._speedEnabled.owner = nil
+        self._cadenceEnabled.owner = nil
+        self._speedCadenceEnabled.owner = nil
+        self._powerEnabled.owner = self
+        self._crankLength.owner = self
+        self._enbled.owner = self
+        self._speedTransmissionType.owner = self
+        self._cadenceTransmissionType.owner = self
+        self._speedCadenceTransmissionType.owner = self
+        self._powerTransmissionType.owner = self
+        self._odometerRollover.owner = self
+        self._frontGears.owner = self
+        self.__frontGearTeeth.owner = self
+        self._rearGears.owner = self
+        self.__rearGearTeeth.owner = self
+        self._shimanoDi2Enabled.owner = self
     }
     
     public convenience init(messageIndex: MessageIndex? = nil,
@@ -367,7 +367,7 @@ open class BikeProfileMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -387,7 +387,7 @@ open class BikeProfileMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

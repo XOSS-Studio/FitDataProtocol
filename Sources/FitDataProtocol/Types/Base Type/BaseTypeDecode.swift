@@ -116,61 +116,61 @@ internal extension BaseType {
         switch self {
         case .enumtype, .uint8, .unknown, .uint8z, .byte:
             if let value = data.to(type: UInt8.self) {
-                return (value.resolution(type: UInt8.self, .removing, resolution: resolution) as! T)
+                return (value.resolution(type: UInt8.self, .removing, resolution: resolution) as? T)
             }
             
         case .sint8:
             if let value = data.to(type: Int8.self) {
-                return (value.resolution(type: Int8.self, .removing, resolution: resolution) as! T)
+                return (value.resolution(type: Int8.self, .removing, resolution: resolution) as? T)
             }
 
         case .sint16:
             if var value = data.to(type: Int16.self) {
                 value = arch == .little ? value.littleEndian : value.bigEndian
-                return (value.resolution(type: Int16.self, .removing, resolution: resolution) as! T)
+                return (value.resolution(type: Int16.self, .removing, resolution: resolution) as? T)
             }
 
         case .uint16, .uint16z:
             if var value = data.to(type: UInt16.self) {
                 value = arch == .little ? value.littleEndian : value.bigEndian
-                return (value.resolution(type: UInt16.self, .removing, resolution: resolution) as! T)
+                return (value.resolution(type: UInt16.self, .removing, resolution: resolution) as? T)
             }
 
         case .sint32:
             if var value = data.to(type: Int32.self) {
                 value = arch == .little ? value.littleEndian : value.bigEndian
-                return (value.resolution(type: Int32.self, .removing, resolution: resolution) as! T)
+                return (value.resolution(type: Int32.self, .removing, resolution: resolution) as? T)
             }
             
         case .uint32, .uint32z:
             if var value = data.to(type: UInt32.self) {
                 value = arch == .little ? value.littleEndian : value.bigEndian
-                return (value.resolution(type: UInt32.self, .removing, resolution: resolution) as! T)
+                return (value.resolution(type: UInt32.self, .removing, resolution: resolution) as? T)
             }
 
         case .string:
-            return (data.smartString as! T)
+            return (data.smartString as? T)
             
         case .float32:
             if let value = data.to(type: Float32.self) {
-                return (value.resolution(.removing, resolution: resolution) as! T)
+                return (value.resolution(.removing, resolution: resolution) as? T)
             }
 
         case .float64:
             if let value = data.to(type: Float64.self) {
-                return (value.resolution(.removing, resolution: resolution) as! T)
+                return (value.resolution(.removing, resolution: resolution) as? T)
             }
 
         case .sint64:
             if var value = data.to(type: Int64.self) {
                 value = arch == .little ? value.littleEndian : value.bigEndian
-                return (value.resolution(type: Int64.self, .removing, resolution: resolution) as! T)
+                return (value.resolution(type: Int64.self, .removing, resolution: resolution) as? T)
             }
 
         case .uint64, .uint64z:
             if var value = data.to(type: UInt64.self) {
                 value = arch == .little ? value.littleEndian : value.bigEndian
-                return (value.resolution(type: UInt64.self, .removing, resolution: resolution) as! T)
+                return (value.resolution(type: UInt64.self, .removing, resolution: resolution) as? T)
             }
         }
         

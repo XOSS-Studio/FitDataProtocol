@@ -74,7 +74,7 @@ open class FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    internal func decode<F: FitMessage>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> {
+    internal func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         fatalError("*** You must override in your class.")
     }
     

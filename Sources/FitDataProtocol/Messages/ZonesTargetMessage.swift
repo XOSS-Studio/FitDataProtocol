@@ -64,11 +64,11 @@ open class ZonesTargetMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$maxHeartRate.owner = self
-        self.$thresholdHeartRate.owner = self
-        self.$ftp.owner = self
-        self.$heartRateZoneType.owner = self
-        self.$powerZoneType.owner = self
+        self._maxHeartRate.owner = self
+        self._thresholdHeartRate.owner = self
+        self._ftp.owner = self
+        self._heartRateZoneType.owner = self
+        self._powerZoneType.owner = self
     }
     
     public init(maxHeartRate: UInt8? = nil,
@@ -78,11 +78,11 @@ open class ZonesTargetMessage: FitMessage {
                 powerZoneType: PowerZoneCalculation? = nil) {
         super.init()
         
-        self.$maxHeartRate.owner = self
-        self.$thresholdHeartRate.owner = self
-        self.$ftp.owner = self
-        self.$heartRateZoneType.owner = self
-        self.$powerZoneType.owner = self
+        self._maxHeartRate.owner = self
+        self._thresholdHeartRate.owner = self
+        self._ftp.owner = self
+        self._heartRateZoneType.owner = self
+        self._powerZoneType.owner = self
         
         if let max = maxHeartRate {
             self.maxHeartRate = Measurement(value: Double(max), unit: self.$maxHeartRate.unitType)
@@ -103,7 +103,7 @@ open class ZonesTargetMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -123,7 +123,7 @@ open class ZonesTargetMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

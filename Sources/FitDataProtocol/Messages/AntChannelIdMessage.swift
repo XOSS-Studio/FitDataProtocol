@@ -62,11 +62,11 @@ open class AntChannelIdMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$channelNumber.owner = self
-        self.$deviceType.owner = self
-        self.$deviceNumber.owner = self
-        self.$transmissionType.owner = self
-        self.$deviceIndex.owner = self
+        self._channelNumber.owner = self
+        self._deviceType.owner = self
+        self._deviceNumber.owner = self
+        self._transmissionType.owner = self
+        self._deviceIndex.owner = self
     }
     
     public convenience init(channelNumber: UInt8? = nil,
@@ -88,7 +88,7 @@ open class AntChannelIdMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -108,7 +108,7 @@ open class AntChannelIdMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

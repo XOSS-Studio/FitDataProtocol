@@ -110,17 +110,17 @@ open class JumpMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$timeStamp.owner = self
+        self._timeStamp.owner = self
         
-        self.$distance.owner = self
-        self.$height.owner = self
-        self.$rotations.owner = self
-        self.$hangTime.owner = self
-        self.$score.owner = self
-        self.$latitude.owner = self
-        self.$longitude.owner = self
-        self.$_speed.owner = self
-        self.$enhanceSpeed.owner = self
+        self._distance.owner = self
+        self._height.owner = self
+        self._rotations.owner = self
+        self._hangTime.owner = self
+        self._score.owner = self
+        self._latitude.owner = self
+        self._longitude.owner = self
+        self.__speed.owner = self
+        self._enhanceSpeed.owner = self
     }
     
     public init(timeStamp: FitTime? = nil,
@@ -150,7 +150,7 @@ open class JumpMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -170,7 +170,7 @@ open class JumpMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

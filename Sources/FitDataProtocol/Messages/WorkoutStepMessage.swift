@@ -99,19 +99,19 @@ open class WorkoutStepMessage: FitMessage {
         
         // TODO: targetLow/targetHigh Change to a Protocol that provides the value for targetType
         
-        self.$messageIndex.owner = self
+        self._messageIndex.owner = self
         
-        self.$name.owner = self
-        self.$durationType.owner = self
-        self.$duration.owner = self
-        self.$targetType.owner = self
-        self.$target.owner = self
-        self.$targetLow.owner = self
-        self.$targetHigh.owner = self
-        self.$intensity.owner = self
-        self.$notes.owner = self
-        self.$equipment.owner = self
-        self.$category.owner = self
+        self._name.owner = self
+        self._durationType.owner = self
+        self._duration.owner = self
+        self._targetType.owner = self
+        self._target.owner = self
+        self._targetLow.owner = self
+        self._targetHigh.owner = self
+        self._intensity.owner = self
+        self._notes.owner = self
+        self._equipment.owner = self
+        self._category.owner = self
     }
     
     public convenience init(messageIndex: MessageIndex? = nil,
@@ -148,7 +148,7 @@ open class WorkoutStepMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -168,7 +168,7 @@ open class WorkoutStepMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

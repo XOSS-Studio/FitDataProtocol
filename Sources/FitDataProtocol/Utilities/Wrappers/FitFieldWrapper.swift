@@ -43,9 +43,13 @@ public protocol FieldWrapper {
 ///
 /// Properpty Wrapper for Standard FIT Fields
 @propertyWrapper
-final public class FitField<T>: FieldWrapper where T: FitFieldCodeable {
+public struct FitField<T>: FieldWrapper where T: FitFieldCodeable {
     public typealias Value = T
     
+    /// Message whose field storage this wrapper reads and writes, set in the message's `init()`
+    ///
+    /// The wrapper is a value stored inside its message, so a message allocates no object per field.
+    /// The reference stays weak: a copy obtained through `$field` that outlives its message reads nil.
     weak internal var owner: FitMessage?
     
     /// Base Type
@@ -71,7 +75,7 @@ final public class FitField<T>: FieldWrapper where T: FitFieldCodeable {
             
             return nil
         }
-        set {
+        nonmutating set {
             
             func failure() {
                 // We remove these values
@@ -86,10 +90,15 @@ final public class FitField<T>: FieldWrapper where T: FitFieldCodeable {
                     
                     let def: FieldDefinition
                     
-                    if let value = value as? String {
-                        def = FieldDefinition(fieldDefinitionNumber: self.fieldNumber, size: UInt8(value.count), type: self.base)
-                    } else if let value = value as? Data {
-                        def = FieldDefinition(fieldDefinitionNumber: self.fieldNumber, size: UInt8(value.count), type: self.base)
+                    if value is String || value is Data {
+                        // Variable size fields declare the encoded byte count, which for a String is
+                        // its UTF-8 length plus the terminator rather than its Character count. A field
+                        // size is one byte, so longer values cannot be encoded.
+                        guard let size = UInt8(exactly: data.count) else {
+                            failure()
+                            return
+                        }
+                        def = FieldDefinition(fieldDefinitionNumber: self.fieldNumber, size: size, type: self.base)
                     } else {
                         def = FieldDefinition(fieldDefinitionNumber: self.fieldNumber, type: self.base)
                     }
@@ -176,7 +185,8 @@ extension Float: FitFieldCodeable {
     /// - Returns: Decoded Value
     public static func decode<T>(type: T.Type, data: Data, base: BaseTypeData, arch: Endian) -> T? {
         if let value = data.to(type: Float32.self) {
-            return (value.resolution(.removing, resolution: base.resolution) as! T)
+            // Resolution yields a Double, which must be narrowed to Float before the cast
+            return Float(value.resolution(.removing, resolution: base.resolution)) as? T
         }
         
         return nil

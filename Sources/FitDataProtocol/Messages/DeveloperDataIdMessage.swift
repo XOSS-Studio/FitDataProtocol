@@ -62,11 +62,11 @@ open class DeveloperDataIdMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$developerId.owner = self
-        self.$applicationId.owner = self
-        self.$manufacturer.owner = self
-        self.$dataIndex.owner = self
-        self.$applicationVersion.owner = self
+        self._developerId.owner = self
+        self._applicationId.owner = self
+        self._manufacturer.owner = self
+        self._dataIndex.owner = self
+        self._applicationVersion.owner = self
     }
     
     public convenience init(developerId: Data? = nil,
@@ -89,7 +89,7 @@ open class DeveloperDataIdMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -109,7 +109,7 @@ open class DeveloperDataIdMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

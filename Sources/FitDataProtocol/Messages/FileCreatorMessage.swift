@@ -46,8 +46,8 @@ open class FileCreatorMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$softwareVersion.owner = self
-        self.$hardwareVersion.owner = self
+        self._softwareVersion.owner = self
+        self._hardwareVersion.owner = self
     }
 
     public convenience init(softwareVersion: UInt16? = nil, hardwareVersion: UInt8? = nil) {
@@ -63,7 +63,7 @@ open class FileCreatorMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -83,7 +83,7 @@ open class FileCreatorMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
 
-        return .success(msg as! F)
+        return .success(msg)
     }
 
     /// Encodes the Definition Message for FitMessage

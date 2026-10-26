@@ -746,101 +746,101 @@ open class LapMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$timeStamp.owner = self
-        self.$messageIndex.owner = self
+        self._timeStamp.owner = self
+        self._messageIndex.owner = self
         
-        self.$event.owner = self
-        self.$eventType.owner = self
-        self.$startTime.owner = self
-        self.$startLatitude.owner = self
-        self.$startLongitude.owner = self
-        self.$endLatitude.owner = self
-        self.$endLongitude.owner = self
-        self.$totalElapsedTime.owner = self
-        self.$totalTimerTime.owner = self
-        self.$totalDistance.owner = self
-        self.$totalCycles.owner = self
-        self.$totalCalories.owner = self
-        self.$totalFatCalories.owner = self
-        self.$_averageSpeed.owner = self
-        self.$enhancedAvgSpeed.owner = self
-        self.$_maximumSpeed.owner = self
-        self.$enhancedMaximumSpeed.owner = self
-        self.$averageHeartRate.owner = self
-        self.$maximumHeartRate.owner = self
-        self.$averageCadence.owner = self
-        self.$maximumCadence.owner = self
-        self.$averagePower.owner = self
-        self.$maximumPower.owner = self
-        self.$totalAscent.owner = self
-        self.$totalDescent.owner = self
-        self.$intensity.owner = self
-        self.$lapTrigger.owner = self
-        self.$sport.owner = self
-        self.$eventGroup.owner = self
-        self.$lengths.owner = self
-        self.$normalizedPower.owner = self
-        self.$leftRightBalance.owner = self
-        self.$firstLengthIndex.owner = self
-        self.$averageStrokeDistance.owner = self
-        self.$swimStroke.owner = self
-        self.$subSport.owner = self
-        self.$activeLengths.owner = self
-        self.$_averageAltitude.owner = self
-        self.$enhancedAverageAltitude.owner = self
-        self.$_maximumAltitude.owner = self
-        self.$enhancedMaximumAltitude.owner = self
-        self.$gpsAccuracy.owner = self
-        self.$averageGrade.owner = self
-        self.$averagePositiveGrade.owner = self
-        self.$averageNegitiveGrade.owner = self
-        self.$maximumPositiveGrade.owner = self
-        self.$maximumNegitiveGrade.owner = self
-        self.$averageTemperature.owner = self
-        self.$maximumTemperature.owner = self
-        self.$totalMovingTime.owner = self
-        self.$averagePositiveVerticalSpeed.owner = self
-        self.$averageNegitiveVerticalSpeed.owner = self
-        self.$maximumPositiveVerticalSpeed.owner = self
-        self.$maximumNegitiveVerticalSpeed.owner = self
-        self.$timeInHrZone.owner = self
-        self.$timeInSpeedZone.owner = self
-        self.$timeInCadenceZone.owner = self
-        self.$timeInPowerZone.owner = self
-        self.$repetionNumber.owner = self
-        self.$_minimumAltitude.owner = self
-        self.$enhancedMinimumAltitude.owner = self
-        self.$minimumHeartRate.owner = self
-        self.$workoutStepIndex.owner = self
-        self.$opponentScore.owner = self
-        self.$playerScore.owner = self
-        self.$strokeCount.owner = self
-        self.$zoneCount.owner = self
-        self.$averageVerticalOscillation.owner = self
-        self.$avgStanceTimePercent.owner = self
-        self.$avgStanceTimeDuration.owner = self
-        self.$avgStanceTimeBalance.owner = self
-        self.$averageFractionalCadence.owner = self
-        self.$averageTotalHemoglobinConcentration.owner = self
-        self.$minimumTotalHemoglobinConcentration.owner = self
-        self.$maximumTotalHemoglobinConcentration.owner = self
-        self.$averageSaturatedHemoglobinPercent.owner = self
-        self.$minimumSaturatedHemoglobinPercent.owner = self
-        self.$maximumSaturatedHemoglobinPercent.owner = self
-        self.$avgLeftTorqueEffectiveness.owner = self
-        self.$avgRightTorqueEffectiveness.owner = self
-        self.$avgLeftPedalSmoothness.owner = self
-        self.$avgRightPedalSmoothness.owner = self
-        self.$avgCombinedPedalSmoothness.owner = self
-        self.$timeStanding.owner = self
-        self.$standCount.owner = self
-        self.$averageStepLength.owner = self
-        self.$averageAscentSpeed.owner = self
-        self.$totalGrit.owner = self
-        self.$totalFlow.owner = self
-        self.$jumpCount.owner = self
-        self.$averageGrit.owner = self
-        self.$averageFlow.owner = self
+        self._event.owner = self
+        self._eventType.owner = self
+        self._startTime.owner = self
+        self._startLatitude.owner = self
+        self._startLongitude.owner = self
+        self._endLatitude.owner = self
+        self._endLongitude.owner = self
+        self._totalElapsedTime.owner = self
+        self._totalTimerTime.owner = self
+        self._totalDistance.owner = self
+        self._totalCycles.owner = self
+        self._totalCalories.owner = self
+        self._totalFatCalories.owner = self
+        self.__averageSpeed.owner = self
+        self._enhancedAvgSpeed.owner = self
+        self.__maximumSpeed.owner = self
+        self._enhancedMaximumSpeed.owner = self
+        self._averageHeartRate.owner = self
+        self._maximumHeartRate.owner = self
+        self._averageCadence.owner = self
+        self._maximumCadence.owner = self
+        self._averagePower.owner = self
+        self._maximumPower.owner = self
+        self._totalAscent.owner = self
+        self._totalDescent.owner = self
+        self._intensity.owner = self
+        self._lapTrigger.owner = self
+        self._sport.owner = self
+        self._eventGroup.owner = self
+        self._lengths.owner = self
+        self._normalizedPower.owner = self
+        self._leftRightBalance.owner = self
+        self._firstLengthIndex.owner = self
+        self._averageStrokeDistance.owner = self
+        self._swimStroke.owner = self
+        self._subSport.owner = self
+        self._activeLengths.owner = self
+        self.__averageAltitude.owner = self
+        self._enhancedAverageAltitude.owner = self
+        self.__maximumAltitude.owner = self
+        self._enhancedMaximumAltitude.owner = self
+        self._gpsAccuracy.owner = self
+        self._averageGrade.owner = self
+        self._averagePositiveGrade.owner = self
+        self._averageNegitiveGrade.owner = self
+        self._maximumPositiveGrade.owner = self
+        self._maximumNegitiveGrade.owner = self
+        self._averageTemperature.owner = self
+        self._maximumTemperature.owner = self
+        self._totalMovingTime.owner = self
+        self._averagePositiveVerticalSpeed.owner = self
+        self._averageNegitiveVerticalSpeed.owner = self
+        self._maximumPositiveVerticalSpeed.owner = self
+        self._maximumNegitiveVerticalSpeed.owner = self
+        self._timeInHrZone.owner = self
+        self._timeInSpeedZone.owner = self
+        self._timeInCadenceZone.owner = self
+        self._timeInPowerZone.owner = self
+        self._repetionNumber.owner = self
+        self.__minimumAltitude.owner = self
+        self._enhancedMinimumAltitude.owner = self
+        self._minimumHeartRate.owner = self
+        self._workoutStepIndex.owner = self
+        self._opponentScore.owner = self
+        self._playerScore.owner = self
+        self._strokeCount.owner = self
+        self._zoneCount.owner = self
+        self._averageVerticalOscillation.owner = self
+        self._avgStanceTimePercent.owner = self
+        self._avgStanceTimeDuration.owner = self
+        self._avgStanceTimeBalance.owner = self
+        self._averageFractionalCadence.owner = self
+        self._averageTotalHemoglobinConcentration.owner = self
+        self._minimumTotalHemoglobinConcentration.owner = self
+        self._maximumTotalHemoglobinConcentration.owner = self
+        self._averageSaturatedHemoglobinPercent.owner = self
+        self._minimumSaturatedHemoglobinPercent.owner = self
+        self._maximumSaturatedHemoglobinPercent.owner = self
+        self._avgLeftTorqueEffectiveness.owner = self
+        self._avgRightTorqueEffectiveness.owner = self
+        self._avgLeftPedalSmoothness.owner = self
+        self._avgRightPedalSmoothness.owner = self
+        self._avgCombinedPedalSmoothness.owner = self
+        self._timeStanding.owner = self
+        self._standCount.owner = self
+        self._averageStepLength.owner = self
+        self._averageAscentSpeed.owner = self
+        self._totalGrit.owner = self
+        self._totalFlow.owner = self
+        self._jumpCount.owner = self
+        self._averageGrit.owner = self
+        self._averageFlow.owner = self
     }
     
     public convenience init(timeStamp: FitTime? = nil,
@@ -1037,7 +1037,7 @@ open class LapMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -1057,7 +1057,7 @@ open class LapMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

@@ -67,13 +67,13 @@ open class FileCapabilitiesMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$messageIndex.owner = self
+        self._messageIndex.owner = self
         
-        self.$fileType.owner = self
-        self.$fileFlags.owner = self
-        self.$directory.owner = self
-        self.$maxCount.owner = self
-        self.$maxSize.owner = self
+        self._fileType.owner = self
+        self._fileFlags.owner = self
+        self._directory.owner = self
+        self._maxCount.owner = self
+        self._maxSize.owner = self
     }
     
     public convenience init(messageIndex: MessageIndex? = nil,
@@ -98,7 +98,7 @@ open class FileCapabilitiesMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -118,7 +118,7 @@ open class FileCapabilitiesMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

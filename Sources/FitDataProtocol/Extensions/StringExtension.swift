@@ -29,7 +29,9 @@ extension String: FitFieldCodeable {
     /// Encode Into Data
     /// - Parameter base: BaseTypeData
     public func encode(base: BaseTypeData) -> Data? {
-        if let stringData = self.data(using: .utf8) {
+        if var stringData = self.data(using: .utf8) {
+            // FIT strings are null terminated, and the field size includes the terminator
+            stringData.append(0)
             return stringData
         }
         

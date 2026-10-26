@@ -180,33 +180,33 @@ open class UserProfileMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$timeStamp.owner = self
-        self.$messageIndex.owner = self
+        self._timeStamp.owner = self
+        self._messageIndex.owner = self
         
-        self.$friendlyName.owner = self
-        self.$weight.owner = self
-        self.$speedSetting.owner = self
-        self.$heartRateSetting.owner = self
-        self.$distanceSetting.owner = self
-        self.$powerSetting.owner = self
-        self.$positionSetting.owner = self
-        self.$temperatureSetting.owner = self
-        self.$localId.owner = self
-        self.$globalId.owner = self
-        self.$heightSetting.owner = self
-        self.$runningStepLength.owner = self
-        self.$walkingStepLength.owner = self
-        self.$gender.owner = self
-        self.$age.owner = self
-        self.$height.owner = self
-        self.$language.owner = self
-        self.$elevationSetting.owner = self
-        self.$weightSetting.owner = self
-        self.$restingHeartRate.owner = self
-        self.$maxRunningHeartRate.owner = self
-        self.$maxBikingHeartRate.owner = self
-        self.$maxHeartRate.owner = self
-        self.$activityClass.owner = self
+        self._friendlyName.owner = self
+        self._weight.owner = self
+        self._speedSetting.owner = self
+        self._heartRateSetting.owner = self
+        self._distanceSetting.owner = self
+        self._powerSetting.owner = self
+        self._positionSetting.owner = self
+        self._temperatureSetting.owner = self
+        self._localId.owner = self
+        self._globalId.owner = self
+        self._heightSetting.owner = self
+        self._runningStepLength.owner = self
+        self._walkingStepLength.owner = self
+        self._gender.owner = self
+        self._age.owner = self
+        self._height.owner = self
+        self._language.owner = self
+        self._elevationSetting.owner = self
+        self._weightSetting.owner = self
+        self._restingHeartRate.owner = self
+        self._maxRunningHeartRate.owner = self
+        self._maxBikingHeartRate.owner = self
+        self._maxHeartRate.owner = self
+        self._activityClass.owner = self
     }
     
     public convenience init(timeStamp: FitTime? = nil,
@@ -284,7 +284,7 @@ open class UserProfileMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -304,7 +304,7 @@ open class UserProfileMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

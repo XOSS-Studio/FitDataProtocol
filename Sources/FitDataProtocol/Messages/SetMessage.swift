@@ -100,18 +100,18 @@ open class SetMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$timeStamp.owner = self
+        self._timeStamp.owner = self
         
-        self.$duration.owner = self
-        self.$repetitions.owner = self
-        self.$weight.owner = self
-        self.$setType.owner = self
-        self.$startTime.owner = self
-        self.$category.owner = self
-        self.$_exerciseName.owner = self
-        self.$weightDisplayUnit.owner = self
-        self.$messageIndex.owner = self
-        self.$workoutSetpIndex.owner = self
+        self._duration.owner = self
+        self._repetitions.owner = self
+        self._weight.owner = self
+        self._setType.owner = self
+        self._startTime.owner = self
+        self._category.owner = self
+        self.__exerciseName.owner = self
+        self._weightDisplayUnit.owner = self
+        self._messageIndex.owner = self
+        self._workoutSetpIndex.owner = self
     }
     
     public init(timeStamp: FitTime? = nil,
@@ -152,7 +152,7 @@ open class SetMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -172,7 +172,7 @@ open class SetMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

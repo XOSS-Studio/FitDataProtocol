@@ -52,9 +52,9 @@ open class VideoMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$url.owner = self
-        self.$hostingProvider.owner = self
-        self.$duration.owner = self
+        self._url.owner = self
+        self._hostingProvider.owner = self
+        self._duration.owner = self
     }
     
     public init(url: String? = nil, hostingProvider: String? = nil, duration: Measurement<UnitDuration>? = nil) {
@@ -71,7 +71,7 @@ open class VideoMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -91,7 +91,7 @@ open class VideoMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

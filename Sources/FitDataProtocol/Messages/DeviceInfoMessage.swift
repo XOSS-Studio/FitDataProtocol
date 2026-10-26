@@ -132,25 +132,25 @@ open class DeviceInfoMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$timeStamp.owner = self
+        self._timeStamp.owner = self
         
-        self.$deviceIndex.owner = self
-        self.$deviceType.owner = self
-        self.$manufacturer.owner = self
-        self.$serialNumber.owner = self
-        self.$product.owner = self
-        self.$softwareVersion.owner = self
-        self.$hardwareVersion.owner = self
-        self.$cumulativeOpTime.owner = self
-        self.$batteryVoltage.owner = self
-        self.$batteryStatus.owner = self
-        self.$bodylocation.owner = self
-        self.$sensorDescription.owner = self
-        self.$transmissionType.owner = self
-        self.$deviceNumber.owner = self
-        self.$antNetwork.owner = self
-        self.$source.owner = self
-        self.$productName.owner = self
+        self._deviceIndex.owner = self
+        self._deviceType.owner = self
+        self._manufacturer.owner = self
+        self._serialNumber.owner = self
+        self._product.owner = self
+        self._softwareVersion.owner = self
+        self._hardwareVersion.owner = self
+        self._cumulativeOpTime.owner = self
+        self._batteryVoltage.owner = self
+        self._batteryStatus.owner = self
+        self._bodylocation.owner = self
+        self._sensorDescription.owner = self
+        self._transmissionType.owner = self
+        self._deviceNumber.owner = self
+        self._antNetwork.owner = self
+        self._source.owner = self
+        self._productName.owner = self
     }
     
     public convenience init(timeStamp: FitTime? = nil,
@@ -199,7 +199,7 @@ open class DeviceInfoMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -219,7 +219,7 @@ open class DeviceInfoMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage

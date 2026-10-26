@@ -46,8 +46,8 @@ open class StressLevelMessage: FitMessage {
     public required init() {
         super.init()
         
-        self.$stressLevel.owner = self
-        self.$timeCalculated.owner = self
+        self._stressLevel.owner = self
+        self._timeCalculated.owner = self
     }
     
     public init(stressLevel: Int16? = nil, timeCalculated: FitTime? = nil) {
@@ -63,7 +63,7 @@ open class StressLevelMessage: FitMessage {
     ///   - fieldData: FileData
     ///   - definition: Definition Message
     /// - Returns: FitMessage Result
-    override func decode<F>(fieldData: FieldData, definition: DefinitionMessage) -> Result<F, FitDecodingError> where F: FitMessage {
+    override func decode(fieldData: FieldData, definition: DefinitionMessage) -> Result<FitMessage, FitDecodingError> {
         var testDecoder = DecodeData()
         
         var fieldDict: [UInt8: FieldDefinition] = [UInt8: FieldDefinition]()
@@ -83,7 +83,7 @@ open class StressLevelMessage: FitMessage {
         let devData = self.decodeDeveloperData(data: fieldData, definition: definition)
         msg.developerData = devData.isEmpty ? nil : devData
         
-        return .success(msg as! F)
+        return .success(msg)
     }
     
     /// Encodes the Definition Message for FitMessage
